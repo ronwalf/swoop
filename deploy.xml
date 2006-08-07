@@ -1,0 +1,73 @@
+<project name="Swoop-Deploy" default="nightly" basedir=".">
+  <description>
+    Swoop Webstart Deploy
+  </description>
+
+  <import file="build.xml"/>
+  <import file="osx.xml"/>
+  
+  <taskdef name="vampwar"       classname="venus.ant.taskdefs.VampWar" />
+  <taskdef name="vampinstaller" classname="venus.ant.taskdefs.VampInstaller" />
+  
+  <!-- Read user properties -->
+  <property file="build.properties"/>
+  <property file="${user.home}/build.properties"/>
+  
+  <!-- Enviroment -->
+  <property environment="env"/>
+
+    
+  <property name="project.webstart.dir" value="/home/www/mindswap/html/2004/SWOOP/webstarts"/>
+  <property name="project.webstart.url" value="http://www.mindswap.org/2004/SWOOP/webstarts"/>
+  <property name="project.webstart.stage" value="stage-tmp"/>
+  
+  <target name="webstart" depends="dist">
+    <vampwar dest="${dist.dir}/${project.label}.war">
+      <jnlp src="${project.name}.jnlp">
+        <resources>
+          <jar src="${dist.dir}/lib/${project.name}.jar"/>
+          <fileset dir="${dist.dir}">
+            <include name="lib/**/*.jar"/>
+            <exclude name="lib/${project.name}.jar"/>
+          </fileset>
+        </resources>
+      </jnlp>
+      <jarsigner
+            keystore="${sign.keystore}"
+            alias="${sign.alias}"
+            storepass="${sign.password}"
+            keypass="${sign.password}"/>
+     
+    </vampwar>
+  </target>
+
+  <target name="deploy" depends="label-date, webstart">
+    <delete dir="${project.webstart.stage}"/>
+    <mkdir dir="${project.webstart.stage}"/>
+    <unjar src="${dist.dir}/${project.label}.war" 
+           dest="${project.webstart.stage}"/>
+    <replace file="${project.webstart.stage}/${project.name}.jnlp">
+      <replacefilter token="$$$$name"
+                    value="${project.name}.jnlp"/>
+      <replacefilter token="$$$$codebase"
+                    value="${project.webstart.url}/${project.label}/"/>
+    </replace>
+    
+    <delete dir="${project.webstart.dir}/${project.label}"/>
+    <mkdir dir="${project.webstart.dir}/${project.label}"/>
+    <copy todir="${project.webstart.dir}/${project.label}">
+      <fileset dir="${project.webstart.stage}"/>
+    </copy>
+    <delete dir="${project.webstart.stage}"/>
+  </target>
+
+
+  <target name="deploy-nightly" depends="label-nightly">
+    <antcall target="deploy"/>
+  </target>
+
+  <target name="deploy-release" depends="label-release">
+    <antcall target="deploy"/>
+  </target>
+
+</project>

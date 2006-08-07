@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+<project name="Swoop" default="dist" basedir=".">
+    <description>
+      OWL Ontology browser and editor
+    </description>
+
+    <!-- Read user properties -->
+    <property file="build.properties"/>
+    <property file="${user.home}/build.properties"/>
+
+    <!-- Enviroment -->
+    <property environment="env"/>
+
+    <!-- Global Properties -->
+    <property name="base.dir" location="" />
+    <property name="build.dir" location="${base.dir}/build" />
+    <property name="dist.dir" location="${base.dir}/dist" />
+    <!--<property name="images.dir" location="${base.dir}/images" />-->
+    <property name="lib.dir" location="${base.dir}/lib"/>
+    <property name="src.dir" location="${base.dir}/src" />
+    <property name="test.dir" location="${base.dir}/test" />
+
+    <property name="project.name" value="swoop" />
+    <property name="project.version.number" value="2.3-beta3" />
+    <property name="mainclass" value="org.mindswap.swoop.Swoop"/>
+    <property name="test.class.name" value="org.mindswap.swoop.AllTests"/>
+    <property name="catalina.home" value="${env.CATALINA_HOME}" />
+    <property name="project.version.file" value="org/mindswap/swoop/version.properties"/>
+    <property name="project.version.template" value="${src.dir}/${project.version.file}.in"/>
+
+   
+    <path id="project.class.path">
+        <pathelement location="${lib.dir}" />
+        <pathelement location="${build.dir}" />
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+            <exclude name="**/${project.name}*.jar"/>
+            <exclude name="ekit/ekitapplet*.jar"/>
+            <!--<exclude name="**/qtag*"/>-->
+        </fileset>
+    </path>
+   
+    <target name="init">
+        <pathconvert targetos="unix" property="classpath" refid="project.class.path" />
+        <!--<echo>CLASSPATH=${classpath}</echo>-->
+        <!-- Create the time stamp -->
+        <tstamp/>
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <target name="compile" depends="init"
+            description="Compile source files." >
+        <javac source="1.4" target="1.4" srcdir="${src.dir}" destdir="${build.dir}" debug="yes">
+            <classpath refid="project.class.path"/>
+            <exclude name="org/mindswap/swoop/rules/**/*.java"/>
+            <exclude name="org/mindswap/swoop/reasoner/SwoopDIGReasoner.java"/>
+            <exclude name="org/mindswap/swoop/refactoring/TestSegmentedClassification.java"/>
+            <exclude name="org/mindswap/swoop/refactoring/TestSegmentation.java"/>
+            <!--
+            <exclude name="org/mindswap/swoop/renderer/entity/NLEntityRenderer.java"/>
+            <exclude name="org/mindswap/swoop/renderer/entity/NLVisitor.java"/>
+            -->
+        </javac>
+        <javac source="1.4" target="1.4" srcdir="${test.dir}" destdir="${build.dir}" debug="yes">
+            <classpath refid="project.class.path"/>
+            <exclude name="org/mindswap/swoop/debugger/*.java"/>
+            <exclude name="org/mindswap/swoop/locality/*.java"/>
+        </javac> 
+    </target>
+
+    <target name="build" depends="compile, copy-version-info"
+            description="Compile sources and copy data files into build directory.">
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}">
+                <exclude name="**/*.java" />
+            </fileset>
+        </copy>
+        
+        <!--
+        <copy todir="${build.dir}/images">
+            <fileset dir="${images.dir}"/>
+        </copy>
+        -->
+    </target>
+
+    <target name="distfiles" depends="init">
+       <!-- Copy in lib files --><!--
+        <mkdir dir="${dist.dir}/lib" />
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="${lib.dir}">
+                <include name="**/*.jar" />
+                <exclude name="**/${project.name}*.jar"/>
+            </fileset>
+        </copy>-->
+        
+        <!-- Copy base files in -->
+        <copy todir="${dist.dir}">
+            <fileset dir="${base.dir}" includes="build.xml favorites.txt
+                                                 readme.txt runme.sh runme.bat
+                                                 swoop.jnlp owlapi.owl">
+                <include name="src/**/*" />
+                <include name="test/**/*" />
+                <!--<include name="images/**/*" />-->
+                <include name="lib/**/*" />
+                <exclude name="**/*.class" />
+                <exclude name="lib/**/${project.name}*.jar" />
+                <exclude name="lib/ekit/ekitapplet*.jar" />
+                <!--<exclude name="lib/**/qtag*"/>-->
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="dist" depends="build,distfiles"
+            description="Generate a distribution" >
+        <!-- Generate relative classpath for jar file -->
+        <pathconvert dirsep="/" pathsep=" " property="Class-Path">
+            <map from="${lib.dir}/" to=""/>
+            <map from="${lib.dir}\" to=""/> <!--" Dumb vim problem w/ quotes-->
+            <path>
+                <fileset dir="${lib.dir}">
+                    <include name="**/*.jar" />
+                    <exclude name="**/${project.name}*.jar"/>
+                    <!--<exclude name="**/qtag*"/>-->
+                </fileset>
+            </path>
+        </pathconvert>
+        
+        <!-- Make Jar file. --> 
+        <jar jarfile="${dist.dir}/lib/${project.name}.jar"
+             basedir="${build.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${mainclass}"/>
+                <attribute name="Class-Path" value="${Class-Path}" />
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="copy-version-info" depends="label-date">
+        <copy file="${project.version.template}" tofile="${build.dir}/${project.version.file}" overwrite="true"/>
+        <echo message="${project.version.label}"/>
+        <replace file="${build.dir}/${project.version.file}">
+            <replacefilter token="$$$$VERSION"
+                           value="${project.version.label}"/>
+            <replacefilter token="$$$$DATE"
+                           value="${TODAY}"/>
+        </replace>
+    </target>
+    
+    <target name="label-date" depends="init">
+        <property name="project.version.label"
+                  value="${DSTAMP}"/>
+        <property name="project.label" 
+                  value="${project.name}-${DSTAMP}"/>
+    </target>
+
+    <target name="label-nightly" depends="init">
+        <property name="project.version.label"
+                  value="${DSTAMP}"/>
+        <property name="project.label" 
+                  value="${project.name}-nightly"/>
+    </target>
+    
+    <target name="label-release" depends="init">
+        <property name="project.version.label"
+                  value="${project.version.number}"/>
+        <property name="project.label" 
+                  value="${project.name}-${project.version.number}"/>
+    </target>
+        
+
+    <target name="zipfile" depends="label-date, dist"
+            description="Build a zipfile containing source and binaries.">
+        <zip destfile="${dist.dir}/${project.label}.zip">
+            <zipfileset dir="${dist.dir}" prefix="${project.label}"
+                        excludes="${project.name}*.zip"/>
+        </zip>
+    </target>
+
+    <target name="release" depends="label-release"
+            description="Build a releasable zipfile.">
+        <antcall target="zipfile"/>
+    </target>
+
+    <target name="nightly-release" depends="label-nightly"
+            description="Build the nightly release">
+      <antcall target="zipfile"/>
+    </target>
+
+    <target name="test" depends="build">
+      <junit fork="yes" haltonfailure="yes">
+        <test name="${test.class.name}" />
+        <formatter type="plain" usefile="false" />
+        <classpath refid="project.class.path"/>
+      </junit>
+    </target>
+    
+    <target name="clean" description="Clean up build files">
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" />
+    </target>
+
+</project>

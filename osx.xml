@@ -1,0 +1,48 @@
+<project name="Swoop-JarBundler" default="bundle" basedir=".">
+  <description>
+    Swoop Jar Bundler
+  </description>
+
+  <import file="build.xml"/>
+  
+  <taskdef name="jarbundler" classname="com.loomcom.ant.tasks.jarbundler.JarBundler"/>
+  <!-- Read user properties -->
+  <property file="build.properties"/>
+  <property file="${user.home}/build.properties"/>
+  
+  <!-- Enviroment -->
+  <property environment="env"/>
+
+    
+  <target name="bundle" depends="label-date, dist">
+    <delete dir="${dist.dir}/SWOOP-${project.version.label}.app"/>
+    <jarbundler 
+        dir="${dist.dir}"
+        mainclass="${mainclass}"
+        bundleid="${mainclass}"
+        name="SWOOP-${project.version.label}"
+        version="${project.version.label}"
+        infostring="${project.name} ${project.version.label}"
+        icon="Swoop.icns">
+      <jarfileset dir="${dist.dir}/lib">
+        <include name="**/*.jar"/>
+      </jarfileset>
+    </jarbundler>
+    <zip destfile="${dist.dir}/${project.label}.OSX.zip">
+      <zipfileset dir="${dist.dir}" includes="SWOOP-${project.version.label}.app/**" filemode="755"/>
+    </zip>
+  </target>
+  
+  <target name="release-bundle" depends="label-release"
+          description="Build release OSX bundle">
+    <antcall target="bundle"/>
+  </target>
+  
+  <target name="nightly-bundle" depends="label-nightly"
+          description="Build nightly OSX bundle">
+    <antcall target="bundle"/>
+  </target>
+  
+
+  
+</project>

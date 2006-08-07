@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<!-- JNLP File for SWOOP --> 
+<jnlp 
+  spec="1.0+" 
+  codebase="http://www.mindswap.org/2004/SWOOP/webstarts/nightly/" 
+  href="swoop.jnlp"> 
+  <information> 
+    <title>SWOOP</title> 
+    <vendor>MINDSWAP</vendor> 
+    <homepage href="index.shtml"/> 
+    <description>A 'Feather-weight' OWL Tool</description> 
+    <description kind="short">A hypermedia based Web Ontology Browser/Editor</description> 
+    <!-- icon href="images/swingset2.jpg"/ -->
+    <offline-allowed/> 
+  </information>
+  <security><all-permissions/></security> 
+  <resources> 
+    <j2se version="1.4+"/> 
+    <!--
+    <jar href="lib/swoop.jar" main="true"/>
+    <jar href="lib/pellet/aterm-java-1.6.jar"/>
+    <jar href="lib/dig.jar"/>
+    <jar href="lib/ekit.jar"/>
+    <jar href="lib/ekitspell.jar"/>   
+    <jar href="lib/getopt.jar"/>  
+    <jar href="lib/GraphLayout.jar"/>
+    <jar href="lib/log4j.jar"/>
+    <jar href="lib/pellet/pellet.jar"/>
+    <jar href="lib/rdfapi.jar"/>
+    <jar href="lib/xercesImpl.jar"/>
+    <jar href="lib/xml-apis.jar"/>
+    <jar href="lib/xngr.jar"/>
+    <jar href="lib/xngr-browser.jar"/>
+    <jar href="lib/econn-owlapi/abstractparser.jar"/>
+    <jar href="lib/econn-owlapi/api.jar"/>
+    <jar href="lib/econn-owlapi/impl.jar"/>
+    <jar href="lib/econn-owlapi/inference.jar"/>
+    <jar href="lib/econn-owlapi/io.jar"/>     
+    <jar href="lib/econn-owlapi/owl-servlet.jar"/>
+    <jar href="lib/econn-owlapi/rdfparser.jar"/>
+    <jar href="lib/econn-owlapi/validation.jar"/>
+    <jar href="lib/jakarta-slide-webdavclient-2.0/antlr.jar"/>
+    <jar href="lib/jakarta-slide-webdavclient-2.0/commons-httpclient.jar"/>
+    <jar href="lib/jakarta-slide-webdavclient-2.0/commons-logging.jar"/>
+    <jar href="lib/jakarta-slide-webdavclient-2.0/jakarta-slide-commandline-2.0.jar"/>
+    <jar href="lib/jakarta-slide-webdavclient-2.0/jakarta-slide-webdavlib-2.0.jar"/> -->
+    <property name="jnlp.swoop.isWebStart" value="true"/>
+ </resources> 
+  <application-desc main-class="org.mindswap.swoop.Swoop"/> 
+</jnlp> 
+
