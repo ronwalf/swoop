@@ -55,8 +55,7 @@
             <classpath refid="project.class.path"/>
             <exclude name="org/mindswap/swoop/rules/**/*.java"/>
             <exclude name="org/mindswap/swoop/reasoner/SwoopDIGReasoner.java"/>
-            <exclude name="org/mindswap/swoop/refactoring/TestSegmentedClassification.java"/>
-            <exclude name="org/mindswap/swoop/refactoring/TestSegmentation.java"/>
+            <exclude name="org/mindswap/swoop/refactoring/Test*.java"/>
             <!--
             <exclude name="org/mindswap/swoop/renderer/entity/NLEntityRenderer.java"/>
             <exclude name="org/mindswap/swoop/renderer/entity/NLVisitor.java"/>
