@@ -110,19 +110,19 @@ public class TestSegmentedClassification {
 		allEntities.addAll(allProperties);
 	    
 		System.out.println("Getting the axioms in the ontology");
-		Set allAxioms = seg.getAxiomsInOntology(ontology);
+		Set allAxioms = seg.getAllAxioms();
 		System.out.println("Total number of axioms in the Ontology: " + allAxioms.size());
 		System.out.println("Getting signature of axioms");
-		Map axSignature = seg.axiomsToSignature(allAxioms);
+		Map axSignature = seg.getAxiomsToSignature();
 		System.out.println("Got signature of the axioms");
 		System.out.println("Creating Map from concept names to axioms");
-		Map sigToAxioms = seg.signatureToAxioms(allAxioms, allEntities);
+		Map sigToAxioms = seg.getSignatureToAxioms();
 		System.out.println("DONE");
 		
 		
 		System.out.println("Creating Signature Dependency Map");
 		Map signatureTable = new HashMap();
-		signatureTable = seg.computeSignatureDependenciesOptimized(allAxioms, sigToAxioms, axSignature, allClasses);
+		signatureTable = seg.computeSignatureDependenciesOptimized(allAxioms, sigToAxioms, axSignature, allClasses, false);
 		System.out.println("DONE Creating Signature Dependency Map");
 		System.out.println("********");
 		
@@ -134,13 +134,13 @@ public class TestSegmentedClassification {
 		System.out.println("DONE Getting Large Modules");
 		System.out.println("Original number of large modules: " + largeModules.keySet().size());
 		System.out.println("********");
-		System.out.println("Merging Large Modules");
+		//System.out.println("Merging Large Modules");
 		//Maximum size of the merged modules
-		double maxSize = 5*threshold;
-		signatureTable = seg.mergeLargeModules(largeModules,signatureTable, maxSize);
-		System.out.println("DONE Merging Large Modules");
-		System.out.println("Modules remaining: " + signatureTable.keySet().size());
-		System.out.println("********");
+		//double maxSize = 5*threshold;
+		//signatureTable = seg.mergeLargeModules(largeModules,signatureTable, maxSize);
+		//System.out.println("DONE Merging Large Modules");
+		//System.out.println("Modules remaining: " + signatureTable.keySet().size());
+		//System.out.println("********");
 		
 		
 		
@@ -165,7 +165,7 @@ public class TestSegmentedClassification {
 			Set sigModule = new HashSet();
 			sigModule = (Set)signatureTable.get(ent);
 			Set axiomsInModule = new HashSet();
-			axiomsInModule =  seg.getModuleFromSignature(allAxioms,sigModule,axSignature);
+			axiomsInModule =  seg.getModuleFromSignature(sigModule,axSignature);
 			URI uriModule= new URI("http://www.mindswap.org/testModule" + j +".owl");
 			System.out.println("Getting module");
 			OWLOntology ont = seg.getOntologyFromAxioms(axiomsInModule, uriModule);

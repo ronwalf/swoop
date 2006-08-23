@@ -20,17 +20,7 @@ import java.awt.geom.Point2D;
  */
 public class HierarchicalVertexDataRenderer implements SizeConstants
 {
-	
-	
-	class TreeNodeSizeInfo
-	{
-		public boolean areSameSize = false;
-		public boolean isFirstChildBig = false; // big == diameter of child > (75% of radius of parent)
-		public ClassTreeNode myLargestNode = null;
-		public int maxRadius = Integer.MIN_VALUE;
-	}
-	
-	
+		
 	//private static final Color classColor = new Color(128, 128, 128);
 	//private static final Color selectedClassColor = new Color(255, 255, 225);
 	//private static final Color highlightedColor   = new Color(128, 255, 255);
@@ -61,7 +51,7 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 		
 		Color aColor = node.getFillColor();
 		
-		TreeNodeSizeInfo info = getChildNodeSizeInfo( node );
+		TreeNodeSizeInfo info = node.getChildNodeSizeInfo();
 		for (int i = 0; i < numChildren; i++ )
 		{
 			ClassTreeNode child = node.getChild( i );
@@ -132,10 +122,10 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 						boolean isFitting = false;
 						while ( !isFitting )
 						{
-							rotationAngle = (90 + 30 + angle) * 2 * Math.PI / 360.0;
+							rotationAngle = (90 + 20 + angle) * 2 * Math.PI / 360.0;
 							localForm = AffineTransform.getTranslateInstance( bigSibCenter.x, bigSibCenter.y );
 							localForm.concatenate( AffineTransform.getRotateInstance(rotationAngle));
-							localForm.concatenate( AffineTransform.getTranslateInstance( node.getRadius() + bigSib.getRadius() + + SizeConstants.unitSize, 0));
+							localForm.concatenate( AffineTransform.getTranslateInstance( node.getRadius() + bigSib.getRadius() + SizeConstants.unitSize, 0));
 							angle = angle + increment;
 							
 							Point2D.Double origin = new Point2D.Double(0, 0);
@@ -150,12 +140,31 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 					}
 					else
 					{		
+						/* Computing the angle needed to rotate the current node by wrt the 
+						 *  largest sibling.
+						 * Computing the distance needed to translate the current node by
+						 *  wrt to the center of the largest sibling.
+						 *  
+						 * The computed distance is the same distance between current node's
+						 *  previous sibling to the largest sibling.
+						 * The compute rotation gives a distance between the current node's
+						 *  center and its previous sibling's center of (r1 + r2 + spacing*3),
+						 *  where r1 is preivous sib's radius, r2 is current node's radius, and
+						 *  spaceing = sizeConstants.unitSize/2
+						 * 
+						 * Computing theta relies on the fact that the triangle A-B-C 
+						 *  (where A is the center of the largest sibling, B is the 
+						 *  center of the previous sibling, and C is the center of the 
+						 *  projected current node), is isoscele.  Splitting the triangle
+						 *  by bisecting its lone odd angle into 2 right triangles, we use
+						 *  arcsine to calculate the required angle.
+						 * 
+						 */
 						ClassTreeNode prevSib = node.getParent().getChild( index - 1);
 						int sibRadius  = prevSib.getRadius();
 						int thisRadius = node.getRadius();
 						int radiiSum = sibRadius + thisRadius + SizeConstants.unitSize/2 + SizeConstants.unitSize;
 						Point2D.Double sibCenter = prevSib.getLocalCenter();
-						Point2D.Double thisCenter = node.getLocalCenter();
 						double dCenterToSib = Math.sqrt( Math.pow(bigSibCenter.x - sibCenter.x, 2) + Math.pow(bigSibCenter.y - sibCenter.y, 2) );
 						double theta = Math.asin( (radiiSum/2) / dCenterToSib) * 2;
 								
@@ -174,10 +183,9 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 					int thisRadius = node.getRadius();
 					int radiiSum = sibRadius + thisRadius + SizeConstants.unitSize/2;
 					Point2D.Double sibCenter = prevSib.getLocalCenter();
-					Point2D.Double thisCenter = node.getLocalCenter();
 					double dCenterToSib = Math.sqrt( Math.pow(sibCenter.x, 2) + Math.pow(sibCenter.y, 2) );
 					double theta = Math.asin( (radiiSum/2) / dCenterToSib) * 2;
-							
+					
 					rotationAngle = theta + prevSib.getRotationAngle();
 					
 					localForm    = AffineTransform.getRotateInstance( rotationAngle );
@@ -205,7 +213,7 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 		
 		int numChildren = node.getNumChildren();		
 		//int maxChildRadius = getMaxChildRadius( node );
-		TreeNodeSizeInfo info = getChildNodeSizeInfo( node );
+		TreeNodeSizeInfo info = node.getChildNodeSizeInfo();
 		for (int i = 0; i < numChildren; i++)
 		{
 			ClassTreeNode childNode = node.getChild( i );
@@ -214,6 +222,7 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 		g2d.setTransform( old_xform );
 	}
 
+	/*
 	private TreeNodeSizeInfo getChildNodeSizeInfo( ClassTreeNode node)
 	{
 		int numChildren = node.getNumChildren();
@@ -250,4 +259,5 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 		info.isFirstChildBig = isFirstChildLarge;
 		return info;
 	}
+	*/
 }

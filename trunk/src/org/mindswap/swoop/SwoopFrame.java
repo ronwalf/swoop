@@ -145,7 +145,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			viewResHoldMItem, queryMItem, repairMItem, versionMItem, sudokuMItem;
 	private JMenuItem addBookmarkMenu, remBookmarkMenu, sortBookmarkMenu, sampleOnt0Menu, sampleOnt1Menu, sampleOnt2Menu,
 			sampleOnt3Menu, sampleOnt4Menu, sampleOnt5Menu;
-	private JMenuItem JMenuAutomatic, browserMenu, reloadOntMenu, refreshOntMenu, extractModMenu;
+	private JMenuItem JMenuAutomatic, browserMenu, reloadOntMenu, refreshOntMenu, extractModMenu, extractModDualMenu;
 //	public  JMenu sosMenu;
 	private JMenuItem tableauSOSMenu, findAllMUPSMenu, splitOntMItem;	
 	private JMenu JMenuAdvanced; // location divider between ontology and term display
@@ -608,9 +608,18 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		debugMenu.add(findAllMUPSMenu);
 		debugMenu.add(termDisplay.debugBlackChk);
 		JMenuAdvanced.add(debugMenu);
+		//Module extraction
 		extractModMenu = new JMenuItem("Extract Module");
 		extractModMenu.addActionListener(this);
 		JMenuAdvanced.add(extractModMenu);
+		
+		//
+		//Dual module extraction
+		extractModDualMenu = new JMenuItem("Extract (Dual) Module");
+		extractModDualMenu.addActionListener(this);
+		JMenuAdvanced.add(extractModDualMenu);
+		
+		//
 		JMenuItem showOntGraph = new JMenuItem("Fly The MotherShip");
 		showOntGraph.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -1116,14 +1125,33 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			// extract module for selected entity
 			if (swoopModel.selectedOntology!=null && swoopModel.selectedEntity!=null) {
 				try {
-					Segmentation seg = new Segmentation(swoopModel.getSelectedOntology(), false, false);
+					//No dual concepts
+					Segmentation seg = null;
+					if(!swoopModel.segmentation.containsKey(swoopModel.selectedOntology)){
+						seg = new Segmentation(swoopModel.getSelectedOntology(), false, false);
+						//No dual roles
+						Map aux = new HashMap();
+						aux = swoopModel.getSegmentation();
+						aux.put(swoopModel.getSelectedOntology(), seg);
+						swoopModel.setSegmentation(aux);
+					}
+					else{
+						seg = (Segmentation) swoopModel.getSegmentation().get(swoopModel.selectedOntology);
+						seg.setDualConcepts(false);
+						seg.setDualRoles(false);
+					}
+				
 					Set allClasses = swoopModel.getSelectedOntology().getClasses();  
 					Set allProperties = swoopModel.getSelectedOntology().getObjectProperties();
 					allProperties.addAll(swoopModel.getSelectedOntology().getDataProperties());
 					Set allEntities = new HashSet();
 					allEntities.addAll(allClasses);
 					allEntities.addAll(allProperties);
-				    
+					
+					Set allAxioms = seg.getAllAxioms();
+					Map axSignature = seg.getAxiomsToSignature();
+					Map sigToAxioms = seg.getSignatureToAxioms();
+					/*
 					System.out.println("Getting the axioms in the ontology");
 					Set allAxioms = seg.getAxiomsInOntology(swoopModel.getSelectedOntology());
 					System.out.println("Total number of axioms in the Ontology: " + allAxioms.size());
@@ -1131,17 +1159,18 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 					Map axSignature = seg.axiomsToSignature(allAxioms);
 					System.out.println("Got signature of the axioms");
 					System.out.println("Creating Map from concept names to axioms");
-					Map sigToAxioms = seg.signatureToAxioms(allAxioms, allEntities);
-					System.out.println("DONE");
-					
+					Map sigToAxioms = seg.signatureToAxioms(allAxioms, axSignature);
+					System.out.println("Got map from concept names to axioms");
+					*/
+						
 					Set sig = new HashSet();
 					sig.add(swoopModel.getSelectedEntity());
 					
 					URI uriOntology = swoopModel.getSelectedOntology().getURI();
-					URI uriClass = swoopModel.getSelectedEntity().getURI();
-					
-					OWLOntology module = seg.getModule(allAxioms, sig, axSignature, sigToAxioms, uriOntology, uriClass);
-					
+					 
+					System.out.println("Getting Module");
+					OWLOntology module = seg.getModule(allAxioms, sig, axSignature, sigToAxioms, uriOntology, (OWLClass)swoopModel.getSelectedEntity());
+					System.out.println("Got Module");
 					
 					swoopModel.addOntology(module);
 					
@@ -1163,6 +1192,78 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 				*/
 			}				
 		}
+		else
+			if (e.getSource() == extractModDualMenu) {
+				// extract dual module for selected entity
+				if (swoopModel.selectedOntology!=null && swoopModel.selectedEntity!=null) {
+					try {
+						Segmentation seg = null;
+						if(!swoopModel.segmentation.containsKey(swoopModel.selectedOntology)){
+							seg = new Segmentation(swoopModel.getSelectedOntology(), true, true);
+							//No dual roles
+							Map aux = new HashMap();
+							aux = swoopModel.getSegmentation();
+							aux.put(swoopModel.getSelectedOntology(), seg);
+							swoopModel.setSegmentation(aux);
+						}
+						else{
+							seg = (Segmentation) swoopModel.getSegmentation().get(swoopModel.selectedOntology);
+							seg.setDualConcepts(true);
+							seg.setDualRoles(true);
+						}
+					
+						Set allClasses = swoopModel.getSelectedOntology().getClasses();  
+						Set allProperties = swoopModel.getSelectedOntology().getObjectProperties();
+						allProperties.addAll(swoopModel.getSelectedOntology().getDataProperties());
+						Set allEntities = new HashSet();
+						allEntities.addAll(allClasses);
+						allEntities.addAll(allProperties);
+						
+						Set allAxioms = seg.getAllAxioms();
+						Map axSignature = seg.getAxiomsToSignature();
+						Map sigToAxioms = seg.getSignatureToAxioms();
+						/*
+						System.out.println("Getting the axioms in the ontology");
+						Set allAxioms = seg.getAxiomsInOntology(swoopModel.getSelectedOntology());
+						System.out.println("Total number of axioms in the Ontology: " + allAxioms.size());
+						System.out.println("Getting signature of axioms");
+						Map axSignature = seg.axiomsToSignature(allAxioms);
+						System.out.println("Got signature of the axioms");
+						System.out.println("Creating Map from concept names to axioms");
+						Map sigToAxioms = seg.signatureToAxioms(allAxioms, axSignature);
+						System.out.println("Got map from concept names to axioms");
+						*/
+							
+						Set sig = new HashSet();
+						sig.add(swoopModel.getSelectedEntity());
+						
+						URI uriOntology = swoopModel.getSelectedOntology().getURI();
+						 
+						System.out.println("Getting Module");
+						OWLOntology module = seg.getModule(allAxioms, sig, axSignature, sigToAxioms, uriOntology, (OWLClass)swoopModel.getSelectedEntity());
+						System.out.println("Got Module");
+						
+						swoopModel.addOntology(module);
+						
+					} catch (URISyntaxException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (OWLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					
+					/*
+					AutoEconnPartitioning partitions = new AutoEconnPartitioning(
+							this, swoopModel, swoopModel.getSelectedOntology(), false);
+					partitions.findModule(swoopModel.selectedEntity);
+					*/
+				}				
+			}	
+		
 		else
 		if (e.getSource() == tableauSOSMenu) {
 			swoopModel.setUseTableau(!tableauSOSMenu.isSelected());

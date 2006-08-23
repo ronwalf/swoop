@@ -251,11 +251,14 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		historyEntity = new OWLNamedObject[9999][2]; // current size limitation of history
 		historyImports = new boolean[9999];
 		comparator = new ComparatorFrame(this);
+		
 		listCache = new SwoopCache();
 		setupUI();
 		setupPopupMenu();
 		this.refreshEditorMode();		
 	}
+	
+	
 	
 	public void setupUI () {
 		
