@@ -28,8 +28,7 @@ import org.semanticweb.owl.model.OWLException;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class ClassTreeNode 
-{
-	
+{	
 	class DescendingClassTreeNodeComparator implements Comparator
 	{
 		public int compare(Object o1, Object o2)
@@ -52,11 +51,15 @@ public class ClassTreeNode
 		}
 	}
 	
+	public static final int UNASSIGNED_SIZE = -1423;
+	
 	private URI myURI;
 	private ClassTreeNode myParent = null;
 	private Vector myChildren = new Vector();
 	
-	private int mySubTreeSize = 0;
+	private int mySubTreeSize = UNASSIGNED_SIZE;
+	private TreeNodeSizeInfo myChildNodeSizeInfo = null;
+	
 	private double localX = -1;
 	private double localY = -1;
 	
@@ -152,9 +155,16 @@ public class ClassTreeNode
 	// returns size of subtree rooted at THIS node.  Includes itself
 	public int getSubTreeSize()
 	{
+		// if already assigned, return that value
+		if (mySubTreeSize != UNASSIGNED_SIZE)
+			return mySubTreeSize;
+		
 		// leaf case
 		if ( myChildren.size() == 0 )
-			return 1;
+		{
+			mySubTreeSize = 1;
+			return mySubTreeSize;
+		}
 		
 		int size = 0;
 		for (int i = 0; i < myChildren.size(); i ++)
@@ -163,8 +173,56 @@ public class ClassTreeNode
 			size = size + node.getSubTreeSize();
 		}
 		
-		return size + 1;
+		mySubTreeSize = size + 1;
+		return mySubTreeSize;
 	}
+	
+	
+	public TreeNodeSizeInfo getChildNodeSizeInfo()
+	{
+		if (myChildNodeSizeInfo != null )
+			return myChildNodeSizeInfo;
+		
+		int numChildren = this.getNumChildren();
+		if (numChildren == 0)
+		{
+			myChildNodeSizeInfo = TreeNodeSizeInfo.getNullInfo();
+			return myChildNodeSizeInfo;
+		}
+		int maxChildRadius = Integer.MIN_VALUE;
+		ClassTreeNode largestNode = null;
+		boolean isFirstTime = true;
+		boolean areSameSize = true;
+		boolean isFirstChildLarge = false;
+		for (int i = 0; i < numChildren; i++ )
+		{
+			ClassTreeNode child = this.getChild( i );
+			if ( i == 0 ) //largest node
+			{
+				if ( (2 * child.getRadius()) > (this.getRadius() * 0.75) )
+					isFirstChildLarge = true;
+			}
+			int childsize = child.getRadius();
+			if ((!isFirstTime) && ( maxChildRadius != childsize))
+				areSameSize = false;
+			if ( maxChildRadius < childsize)
+			{
+				maxChildRadius = childsize;
+				largestNode = child;
+			}
+			if ( isFirstTime )
+				isFirstTime = !isFirstTime;
+		}
+		TreeNodeSizeInfo info = new TreeNodeSizeInfo();
+		info.areSameSize = areSameSize;
+		info.maxRadius = maxChildRadius;
+		info.myLargestNode = largestNode;
+		info.isFirstChildBig = isFirstChildLarge;
+		
+		myChildNodeSizeInfo = info;
+		return myChildNodeSizeInfo;
+	}
+	
 	
 	public int getRadius()
 	{ return getSubTreeSize() * SizeConstants.unitSize; }

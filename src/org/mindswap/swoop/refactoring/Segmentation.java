@@ -27,6 +27,7 @@ import org.mindswap.swoop.utils.owlapi.CorrectedRDFRenderer;
 import org.mindswap.swoop.utils.owlapi.DefaultShortFormProvider;
 import org.mindswap.swoop.utils.owlapi.OWLDescriptionFinder;
 import org.mindswap.swoop.utils.owlapi.OWLOntBuilder;
+import org.mindswap.swoop.utils.owlapi.SignatureCollector;
 import org.semanticweb.owl.impl.model.OWLDataFactoryImpl;
 import org.semanticweb.owl.impl.model.OWLDataPropertyInstanceImpl;
 import org.semanticweb.owl.impl.model.OWLDataPropertyRangeAxiomImpl;
@@ -49,6 +50,7 @@ import org.semanticweb.owl.model.OWLDataAllRestriction;
 import org.semanticweb.owl.model.OWLDataCardinalityRestriction;
 import org.semanticweb.owl.model.OWLDataFactory;
 import org.semanticweb.owl.model.OWLDataProperty;
+import org.semanticweb.owl.model.OWLDataPropertyRangeAxiom;
 import org.semanticweb.owl.model.OWLDataRange;
 import org.semanticweb.owl.model.OWLDataSomeRestriction;
 import org.semanticweb.owl.model.OWLDataValue;
@@ -106,8 +108,23 @@ public class Segmentation {
 		private int nlocalityChecks;
 		private boolean dualConcepts;
 		private boolean dualRoles;
-		//private Map testedLocality;
+		private Map classToModule; //Map from each class to the set of axioms in its module
 		
+		//Indices we need
+		public Set allAxioms; //all the axioms in the ontology;
+		public Map axSignature;
+		public Map sigToAxioms;
+		//
+		
+		public Segmentation(OWLOntology source) throws OWLException{
+			this.source = source;
+			OWLDataFactory df = source.getOWLDataFactory();
+			this.DEBUG = false;
+			this.dualConcepts = false;
+			this.dualRoles = false;
+			this.thing = df.getOWLThing();
+			this.nothing = df.getOWLNothing();
+		}
 		
 		public Segmentation(OWLOntology source, boolean dualConcepts, boolean dualRoles) throws URISyntaxException, OWLException {
 			this.source = source;
@@ -115,13 +132,108 @@ public class Segmentation {
 			OWLDataFactory df = source.getOWLDataFactory();
 			this.thing = df.getOWLThing();
 			this.nothing = df.getOWLNothing();
-			this.nlocalityChecks = 0;
 			this.dualConcepts = dualConcepts;
 			this.dualRoles = dualRoles;
-	//		this.testedLocality = new HashMap();
+			
+			//
+			System.out.println("Getting axioms in ontology");
+			this.allAxioms = this.getAxiomsInOntology(source);
+			System.out.println("Getting signature of axioms");
+			this.axSignature = this.axiomsToSignature(allAxioms);
+			System.out.println("Getting map from signature to axioms");
+			this.sigToAxioms = this.signatureToAxioms(allAxioms, axSignature);
+			//
 		}
 		
-	
+		public void setDualConcepts(boolean b){
+			dualConcepts = b;
+		}
+		
+		public void setDualRoles(boolean b){
+			dualRoles = b;
+		}
+		
+		
+		public Set getAllAxioms(){
+			return allAxioms;
+		}
+		
+		public Map getAxiomsToSignature(){
+			return axSignature;
+		}
+		
+		public Map getSignatureToAxioms(){
+			return sigToAxioms;
+		}
+		
+		public OWLDescription makePropositional(OWLDescription desc) throws OWLException, URISyntaxException{
+			OWLDataFactory df = source.getOWLDataFactory();
+			
+			if(desc instanceof OWLClass)
+				return desc;
+			
+			if (desc instanceof OWLNot){
+				OWLDescription not = df.getOWLNot(makePropositional(
+						((OWLNot)desc).getOperand()));
+				return not;
+				//return(builder.complementOf(replaceBottom(((OWLNot)desc).getOperand(), sig)));
+			}
+			
+			if (desc instanceof OWLAnd){
+				Set operands = new HashSet();
+				operands = ((OWLAnd)desc).getOperands();
+				OWLDescription conjunction = df.getOWLAnd(makePropositional(operands));
+                return conjunction;  			
+			}
+			
+			if (desc instanceof OWLOr){
+				Set operands = new HashSet();
+				operands = ((OWLOr)desc).getOperands();
+				OWLDescription disjunction = df.getOWLOr(makePropositional(operands));
+                return disjunction;  			
+			}
+			
+			if(desc instanceof OWLObjectSomeRestriction){
+				OWLDescription res = makePropositional(((OWLObjectSomeRestriction)desc).getDescription());
+				OWLDescription prop = df.getOWLClass(((OWLObjectSomeRestriction)desc).getProperty().getURI());
+				Set conjuncts = new HashSet();
+				conjuncts.add(res);
+				conjuncts.add(prop);
+				return df.getOWLAnd(conjuncts); 
+			}
+			if(desc instanceof OWLDataSomeRestriction){
+				OWLDescription prop = df.getOWLClass(((OWLObjectSomeRestriction)desc).getProperty().getURI());
+				return prop;
+			}
+			if(desc instanceof OWLObjectAllRestriction){
+				OWLDescription res = (OWLDescription)makePropositional(((OWLObjectAllRestriction)desc).getDescription());
+				OWLDescription prop = df.getOWLNot(df.getOWLClass(((OWLObjectAllRestriction)desc).getProperty().getURI()));
+				Set disjuncts = new HashSet();
+				disjuncts.add(res);
+				disjuncts.add(prop);
+				return df.getOWLOr(disjuncts); 
+			}
+			
+			if(desc instanceof OWLCardinalityRestriction){
+				if(((OWLCardinalityRestriction)desc).isAtLeast()){
+					OWLDescription prop = df.getOWLClass(((OWLCardinalityRestriction)desc).getProperty().getURI());
+					return prop; 
+				}
+				if(((OWLCardinalityRestriction)desc).isAtMost()){
+					OWLDescription prop = df.getOWLNot(df.getOWLClass(((OWLCardinalityRestriction)desc).getProperty().getURI()));
+					return prop; 
+				}
+				if(((OWLCardinalityRestriction)desc).isExactly()){
+					OWLDescription prop = df.getOWLNothing();
+					return prop; 
+				}
+			}	
+			
+			return null;
+			
+			
+		}
+		
 		//Takes an OWLDescription and a signature replaces by bottom the entities not in the signature
 		public OWLDescription replaceBottom(OWLDescription desc, Set sig) throws OWLException, URISyntaxException{
 			
@@ -204,6 +316,37 @@ public class Segmentation {
 			
 		}
 		
+		public Set makePropositional(Set s) throws OWLException, URISyntaxException{
+			Set result = new HashSet();
+			Iterator iter = s.iterator();
+			while(iter.hasNext()){
+				
+				OWLObject desc = (OWLObject)iter.next();
+				if(desc == null)
+					System.out.println("Error");
+				
+				if(desc instanceof OWLDescription){
+					OWLDescription prop = makePropositional((OWLDescription)desc);
+					if(prop!= null)
+						result.add(prop);
+				}
+				if(desc instanceof OWLClassAxiom){
+					OWLObject ax = makePropositional((OWLClassAxiom)desc);
+					if(ax!= null)
+						result.add(ax);
+				}
+				if(desc instanceof OWLPropertyAxiom){
+					OWLObject ax = makePropositional((OWLPropertyAxiom)desc);
+					if(ax!= null)
+						result.add(ax);
+				}
+				
+			}
+			return result;
+		}
+		
+		
+		
 		public Set replaceBottom(Set s, Set sig) throws OWLException, URISyntaxException{
 			Set result = new HashSet();
 			Iterator iter = s.iterator();
@@ -213,11 +356,74 @@ public class Segmentation {
 			}
 			return result;
 		}
-/*
-		public OWLClassAxiom replaceBottom(OWLClassAxiom ax, Set sig) throws OWLException, URISyntaxException{
-			return ax;
+
+		
+			
+		public OWLObject makePropositional(OWLPropertyAxiom ax) throws OWLException, URISyntaxException{
+			OWLDataFactory df = source.getOWLDataFactory();
+			OWLObject axiom = null;
+			if (ax instanceof OWLSubPropertyAxiom){
+				OWLDescription sub = df.getOWLClass(((OWLSubPropertyAxiom)ax).getSubProperty().getURI());
+				OWLDescription sup = df.getOWLClass(((OWLSubPropertyAxiom)ax).getSuperProperty().getURI());
+				axiom = df.getOWLSubClassAxiom(sub,sup);
+			}
+			if(ax instanceof OWLEquivalentPropertiesAxiom){
+				Set eqProperties = new HashSet();
+				eqProperties = ((OWLEquivalentPropertiesAxiom)ax).getProperties();
+				Set eqClasses = new HashSet();
+				Iterator iter = eqProperties.iterator();
+				while(iter.hasNext()){
+					OWLProperty prop = (OWLProperty)iter.next();
+					OWLClass cl = df.getOWLClass(prop.getURI());
+					eqClasses.add(cl);
+				}
+				axiom = df.getOWLEquivalentClassesAxiom(eqClasses);
+			}
+			if(ax instanceof OWLInversePropertyAxiom){
+				OWLObjectProperty prop = ((OWLInversePropertyAxiom)ax).getProperty();
+				OWLObjectProperty inv = ((OWLInversePropertyAxiom)ax).getInverseProperty();
+				Set eqClasses = new HashSet();
+				eqClasses.add(df.getOWLClass(prop.getURI()));
+				eqClasses.add(df.getOWLClass(inv.getURI()));
+				axiom = df.getOWLEquivalentClassesAxiom(eqClasses);
+				
+			}
+			if (ax instanceof OWLFunctionalPropertyAxiom){
+				OWLDescription sub = df.getOWLClass(((OWLFunctionalPropertyAxiom)ax).getProperty().getURI());
+				OWLDescription sup = df.getOWLNot(sub);
+				axiom = df.getOWLSubClassAxiom(sub,sup);
+			}
+			//if (ax instanceof OWLInverseFunctionalPropertyAxiom){
+				//OWLDescription sub = df.getOWLClass(((OWLInverseFunctionalPropertyAxiom)ax).getProperty().getURI());
+				//OWLDescription sup = df.getOWLNothing();
+				//axiom = df.getOWLSubClassAxiom(sub,sup);
+			//}
+		return axiom;
 		}
-*/		
+		
+		public OWLObject makePropositional(OWLClassAxiom ax) throws OWLException, URISyntaxException{
+			OWLDataFactory df = source.getOWLDataFactory();
+			OWLObject axiom = null;
+			if (ax instanceof OWLSubClassAxiom){
+				OWLDescription sup = makePropositional(((OWLSubClassAxiom)ax).getSuperClass());
+				OWLDescription sub = makePropositional(((OWLSubClassAxiom)ax).getSubClass());
+				axiom = source.getOWLDataFactory().getOWLSubClassAxiom(sub,sup);
+			}
+			if (ax instanceof OWLEquivalentClassesAxiom ){
+				Set eqclasses = makePropositional(((OWLEquivalentClassesAxiom)ax).getEquivalentClasses());
+			    axiom = source.getOWLDataFactory().getOWLEquivalentClassesAxiom(eqclasses);
+			}
+			if (ax instanceof OWLDisjointClassesAxiom){
+				Set disjointclasses = makePropositional(((OWLDisjointClassesAxiom)ax).getDisjointClasses());
+				axiom = source.getOWLDataFactory().getOWLDisjointClassesAxiom(disjointclasses);
+			}
+				
+			return axiom;
+			
+		}
+		
+		
+		
 		public OWLClassAxiom replaceBottom(OWLClassAxiom ax, Set sig) throws OWLException, URISyntaxException{
 			OWLClassAxiom axiom = null;
 			if (ax instanceof OWLSubClassAxiom){
@@ -286,14 +492,16 @@ public class Segmentation {
 				if(!foreign.contains(((OWLInversePropertyAxiom)ax).getProperty()) && 
 						!foreign.contains(((OWLInversePropertyAxiom)ax).getInverseProperty() )	)
 					return true;
+				
 			}
 			
 			if(ax instanceof OWLPropertyDomainAxiom){
 				if(isNegativelyLocal(((OWLPropertyDomainAxiom)ax).getDomain(),foreign))
 					return true;
-				if(!foreign.contains(((OWLPropertyDomainAxiom)ax).getProperty())&& dualRoles)
+				if(!foreign.contains(((OWLPropertyDomainAxiom)ax).getProperty())&& !dualRoles)
 					return true;
 			}
+			
 			
 			if(ax instanceof OWLObjectPropertyRangeAxiom){
 				if(isNegativelyLocal(((OWLObjectPropertyRangeAxiom)ax).getRange(),foreign))
@@ -305,16 +513,17 @@ public class Segmentation {
 				}						
 			}
 			
+			if(ax instanceof OWLDataPropertyRangeAxiom){
+					if(!foreign.contains(((OWLDataPropertyRangeAxiom)ax).getProperty()) && !dualRoles)
+						return true;
+			}
+			
+			
 			return false;
 		
 		}
 		
 		/*
-		public boolean checkLocality(OWLClassAxiom ax, Set sig) throws Exception{
-			return true;
-		}
-		*/
-		
 		public void saveAxiom(OWLClassAxiom ax, String path) throws OWLException, FileNotFoundException, IOException{
 			OWLOntBuilder ob = new OWLOntBuilder();
 			ax.accept(ob);
@@ -322,20 +531,7 @@ public class Segmentation {
 			
 			saveOntologyToDisk(temp, path);
 		}
-		
-		public void saveSignatureToDisk(Set sig, String path) throws FileNotFoundException, IOException, OWLException{
-			File wkspcFile = new File(path);
-			
-			//swoopModel.setWkspcFile(wkspcFile); 
-			ObjectOutputStream outs = new ObjectOutputStream(
-					new FileOutputStream(wkspcFile));
-			
-			Iterator iter = sig.iterator();
-			while(iter.hasNext()){
-				OWLEntity ent = (OWLEntity)iter.next();
-				outs.writeObject(ent.getURI().toString());
-			}
-		}
+		*/
 		
 		
 		public boolean isPositivelyLocal(OWLDescription desc, Set foreign) throws OWLException{
@@ -349,19 +545,17 @@ public class Segmentation {
 						return true;
 			}
 						
-			//if (desc instanceof OWLDataAllRestriction){
-				//if(!dualRoles)
-					//return false;
-			//	else
-				//	return true;
-			//}
+			if(desc instanceof OWLDataSomeRestriction){
+				if(!foreign.contains(((OWLObjectSomeRestriction)desc).getProperty()) && !dualRoles)
+					return true;
+			}
 			
-			//if(desc instanceof OWLDataSomeRestriction){
-				//if(!dualRoles)
-					//return true;
-				//else
-					//return false;
-			//}
+			if(desc instanceof OWLDataAllRestriction){
+				if(!foreign.contains(((OWLDataAllRestriction)desc).getProperty() )&&
+								dualRoles)
+					return true;
+			}
+	
 						
 			if(desc instanceof OWLObjectSomeRestriction){
 				if(isPositivelyLocal(((OWLObjectSomeRestriction)desc).getDescription(),foreign))
@@ -481,18 +675,7 @@ public class Segmentation {
 					return true;
 			}
 		
-			//if(desc instanceof OWLDataSomeRestriction)
-				//if(!dualRoles)
-					//return false;
-				//else
-					//return true;
-			
-		//	if(desc instanceof OWLDataAllRestriction)
-			//	if(!dualRoles)
-				//	return true;
-				//else
-					//return false;
-			
+		
 			if(desc instanceof OWLObjectSomeRestriction){
 				if(isNegativelyLocal(((OWLObjectSomeRestriction)desc).getDescription(),foreign) &&
 						!foreign.contains(((OWLObjectSomeRestriction)desc).getProperty() )&&
@@ -604,7 +787,7 @@ public class Segmentation {
 			return largeModules;
 		}
 		
-		
+		/*
 		public Map mergeLargeModules(Map largeModules, Map signatureDependencies, double maxSize){
 			Map mergedLarge = new HashMap();
 			Set toMerge = new HashSet();
@@ -672,11 +855,13 @@ public class Segmentation {
 		    return result;
 			}
 		
+		*/
+		
 //		Input: Set of all axioms in the ontology.
 	    //       Map from axioms in the ontology to signature
 		//       Set of all classes in the ontology
 		//Output: Map from class names to the signature of their module.
-		public Map computeSignatureDependenciesOptimized(Set allAxioms, Map sigToAxioms, Map axSignature, Set allClasses) throws Exception{
+		public Map computeSignatureDependenciesOptimized(Set allAxioms, Map sigToAxioms, Map axSignature, Set allClasses, boolean save) throws Exception{
 			int threshold = 200;
 			Map result = new HashMap();
 			Set alreadyProcessed = new HashSet();
@@ -690,13 +875,17 @@ public class Segmentation {
 			while(it.hasNext()){
 				Set sigModule = new HashSet();
 				OWLClass cl = (OWLClass)it.next();
+				
 				if(!alreadyProcessed.contains(cl)){
+					//
+					//classToModule.put(cl, new HashSet());
+					//
 					countClasses++;
 					if(DEBUG)
 						System.out.println("Class: " + cl.getURI().toString());
 					sigModule.add(cl);
 					//***********************************
-					sigModule.addAll(expandSignature(sigModule,sigToAxioms, axSignature, result));
+					sigModule.addAll(expandSignature(cl,sigModule,sigToAxioms, axSignature, result));
 					//************************************
 					if(sigModule.size()> largestModule){
 						largestModule = sigModule.size();
@@ -709,7 +898,7 @@ public class Segmentation {
 					
 					//if(DEBUG)
 						System.out.println("Size: " + sigModule.size());
-				//renderSignature(sigModule);
+				
 					//if(DEBUG)
 						System.out.println(" NUMBER OF MODULES: " + countModules);
 				}
@@ -720,6 +909,18 @@ public class Segmentation {
 				if(DEBUG){
 					System.out.println("Classes Processed: " + alreadyProcessed.size());
 					System.out.println("NUMBER OF LOCALITY CHECKS " + nlocalityChecks);
+				}
+				if(save){
+					Set axiomsInModule = new HashSet();
+					axiomsInModule =  this.getModuleFromSignature(sigModule,axSignature);
+					ShortFormProvider shortFormProvider = new DefaultShortFormProvider();
+					URI uriModule= new URI("http://" + shortFormProvider.shortForm(source.getURI()) + "-" + shortFormProvider.shortForm(cl.getURI()) +".owl" );
+					System.out.println("Getting module");
+					OWLOntology ont = this.getOntologyFromAxioms(axiomsInModule, uriModule);
+					System.out.println("Module size (number of classes):" + ont.getClasses().size());
+					System.out.println("Saving module");
+					String path = "C:/ontologies/Snomed/" + shortFormProvider.shortForm(source.getURI()) + "-" + shortFormProvider.shortForm(cl.getURI()) +".owl";
+					this.saveOntologyToDisk(ont,path);
 				}
 			}
 			
@@ -828,20 +1029,11 @@ public class Segmentation {
 		
 		
 		public boolean checkLocality(OWLClassAxiom ax, Set sig) throws Exception{
-			//This is for debugging purposes
-			String path = "C:/ontologies/problematicAxiom.owl";
-			saveAxiom(ax, path);
-			String pathSig = "C:/ontologies/signature.txt";
-			saveSignatureToDisk(sig, pathSig);
-			//
 			PelletReasoner reasoner = new PelletReasoner();
 			if (DEBUG)
 				System.out.println("Replacing axiom by Bottom");
 			OWLClassAxiom axiom= replaceBottom(ax, sig);
-			//This is for Debugging Purposes
-			//path = "C:/ontologies/problematicBottom.owl";
-			//saveAxiom(axiom, path);
-			//
+		
 			if (DEBUG)
 				System.out.println("DONE Replacing axiom by Bottom");
 			
@@ -870,9 +1062,7 @@ public class Segmentation {
 				if(eqclasses.size() == 2){
 					OWLDescription first = (OWLDescription)iter.next();
 					OWLDescription second = (OWLDescription)iter.next();
-					//if(isObviousEquivalence((OWLEquivalentClassesAxiom)axiom)){
-						//return true;
-					//}
+					
 					if (DEBUG)
 						System.out.println("Calling the Reasoner");
 					if(reasoner.isEquivalentClass(first, second)){
@@ -924,90 +1114,21 @@ public class Segmentation {
 			OWLOntBuilder builder = new OWLOntBuilder(uri);
 			builder.buildOntologyFromAxioms(s);
 			module = builder.getCurrentOntology();
-			//
-			Set axTest = new HashSet();
-			axTest = this.getAxiomsInOntology(module);
-			if(axTest.size()== s.size()){
-				System.out.println("We are getting everything");
-			}
-			//			
+			
 			return module;
 		}
 		
-		//Given a set of axioms, returns the ontology object corresponding to those
-		//axioms.
 		
-		/*
-		public OWLOntology getOntologyFromAxioms(Set s, URI uri) throws URISyntaxException, OWLException{
-			OWLOntology module;
-			OWLDataFactory df = null;
-			OWLBuilder builder = new OWLBuilder();
-			builder.createOntology(uri, uri);
-			module = builder.getOntology();
-			df = module.getOWLDataFactory();
-			//addAnnotations(df);
-			OWLClass thing = df.getOWLThing();
-			AddEntity ae = new AddEntity(module, thing, null);
-			ae.accept((ChangeVisitor) module);
-			Iterator iter = s.iterator();
-			while(iter.hasNext()){
-				OWLObject axiom = (OWLObject)iter.next();
-				if(axiom instanceof OWLClassAxiom){
-				//	if(axiom instanceof OWLEquivalentClassesAxiom){
-					//	AddEquivalentClass aax = new AddEquivalentClass(module, cla, compClass, null);
-	    				//chng.accept((ChangeVisitor) ont);
-					//}
-				//	if(axiom instanceof OWLSubClassAxiom){
-						
-					//}
-				//	if(axiom instanceof OWLDisjointClassesAxiom){
-						
-					//}
-					AddClassAxiom aax = new AddClassAxiom(module,(OWLClassAxiom)axiom,null);
-					aax.accept((ChangeVisitor) module);
-				}
-				if(axiom instanceof OWLPropertyAxiom){
-					if(axiom instanceof OWLFunctionalPropertyAxiom){
-						OWLProperty p = ((OWLFunctionalPropertyAxiom)axiom).getProperty();
-						SetFunctional change = new SetFunctional(module,p,true,null);
-						change.accept((ChangeVisitor) module);
-					}
-					else{
-						if(axiom instanceof OWLTransitivePropertyAxiom){
-							OWLObjectProperty p = (OWLObjectProperty) ((OWLTransitivePropertyAxiom)axiom).getProperty();
-							SetTransitive change2 = new SetTransitive(module,p,true,null);
-							change2.accept((ChangeVisitor) module);
-						}
-						else{
-							if(axiom instanceof OWLSymmetricPropertyAxiom){
-								OWLObjectProperty p = (OWLObjectProperty) ((OWLTransitivePropertyAxiom)axiom).getProperty();
-								SetSymmetric change2 = new SetSymmetric(module,p,true,null);
-								change2.accept((ChangeVisitor) module);
-							}
-							else{
-								AddPropertyAxiom aax = new AddPropertyAxiom(module,(OWLPropertyAxiom)axiom,null);
-								aax.accept((ChangeVisitor) module);
-							
-							}
-						}
-					}
-					
-				}
-				
-    		}
-			return module;
-		}
-		*/
 		
 		//Returns the collection of Axioms in an ontology
-		public Set getAxiomsInOntology(OWLOntology ont) throws OWLException{
+		private Set getAxiomsInOntology(OWLOntology ont) throws OWLException{
 			Set result = new HashSet();
 			AxiomCollector coll = new AxiomCollector(ont);
 			result = coll.axiomize(ont);
 			return result;
 		}
 		
-		public Set expandSignature(Set processed, Map sigToAxioms, Map axSignature, Map moduleMap) throws Exception{
+		public Set expandSignature(OWLEntity cl, Set processed, Map sigToAxioms, Map axSignature, Map moduleMap) throws Exception{
 			int niterations = 0;
 			
 			Set toDo = new HashSet();
@@ -1022,7 +1143,7 @@ public class Segmentation {
 					toDo.addAll(newSig);
 				    newSig = new HashSet();
 					//*******************************
-				    newSig.addAll(updateSignature(processed,toDo, sigToAxioms, axSignature, moduleMap));
+				    newSig.addAll(updateSignature(cl, processed,toDo, sigToAxioms, axSignature, moduleMap));
 					//********************************
 				    niterations++;
 					processed.addAll(toDo);
@@ -1035,7 +1156,7 @@ public class Segmentation {
 			return processed;
 		}
 		
-		public Set updateSignature(Set processed, Set toDo, Map sigToAxioms, Map axSignature, Map moduleMap) throws Exception{
+		public Set updateSignature(OWLEntity cl, Set processed, Set toDo, Map sigToAxioms, Map axSignature, Map moduleMap) throws Exception{
 			
 			
 			
@@ -1087,6 +1208,11 @@ public class Segmentation {
 							nlocalityChecks++;
 							if(!checkLocalitySyntax((OWLClassAxiom)ax, allSig)){
 								newSig.addAll(sigAxiom);
+								//
+								//Set aux = (Set)classToModule.get(cl);
+								//aux.add(ax);
+								//classToModule.put(cl,aux);
+								//
 								changed = true;
 							}
 						            
@@ -1096,6 +1222,11 @@ public class Segmentation {
 						nlocalityChecks++;
 						if(!checkLocality((OWLPropertyAxiom)ax, allSig)){
 							newSig.addAll(sigAxiom);
+							//
+							//Set aux = (Set)classToModule.get(cl);
+							//aux.add(ax);
+							//classToModule.put(cl,aux);
+							//
 							changed = true;
 						}
 					}
@@ -1114,38 +1245,25 @@ public class Segmentation {
 		//Creates a Map:
 		// Key: Concept names in the ontology
 		// Value: Set of axioms that mention that concept
-		public Map signatureToAxioms(Set allAxioms, Set allEntities){
+		private Map signatureToAxioms(Set allAxioms, Map axToSignature) throws OWLException{
 			Map result = new HashMap();
-			Set ax = new HashSet();
-			Iterator it = allEntities.iterator();
-			//create the KeySet
-			while(it.hasNext()){
-				OWLEntity ent = (OWLEntity)it.next();
-				result.put(ent, ax);
-			}
-			Iterator iter = allAxioms.iterator();
-			while(iter.hasNext()){
-				OWLObject axiom = (OWLObject)iter.next();
-				Set sig = new HashSet();
-				sig.addAll(getAxiomSignature(axiom, source));
-				Iterator j = sig.iterator();
-				while(j.hasNext()){
-					OWLEntity cl2 = (OWLEntity)j.next();
-					Set aux = new HashSet();
-					if(result.containsKey(cl2))
-						aux.addAll((Set)result.get(cl2));
-					if(!aux.contains(axiom)){
-							aux.add(axiom);
-							result.put(cl2,aux);
-					}
-					
-				}
-			}
+			SignatureCollector col = new SignatureCollector(allAxioms);
+			result = col.buildSignatureToAxiom(axToSignature);
+		
 			return result;
 		}
 		
+		public Map getClassToModule(){
+			return classToModule;
+		}
+		
 		//Creates a map from axioms in the ontology to their signature
-		public Map axiomsToSignature(Set allAxioms){
+		private Map axiomsToSignature(Set allAxioms) throws OWLException{
+			Map result = new HashMap();
+			SignatureCollector col = new SignatureCollector(allAxioms);
+			return col.buildSignatureMap(allAxioms);
+			
+			/*
 			Map map = new HashMap();
 			Iterator iter = allAxioms.iterator();
 			while(iter.hasNext()){
@@ -1154,35 +1272,21 @@ public class Segmentation {
 				map.put(axiom, sig);
 			}
 			return map;
+			*/
 		}
 		
-		/*
-		public Set getOntologySignature(Set allAxioms, OWLOntology ont){
-			Set result = new HashSet();
-			Iterator iter = allAxioms.iterator();
-			while(iter.hasNext()){
-				OWLObject axiom = (OWLObject)iter.next();
-				Set sig = getAxiomSignature(axiom, ont);
-				result.addAll(sig);
-			}
-			return result;
-		}
-		*/
+	
 		
 		//Having the signature dependencies for an entity, returns its module as a collection
 		//of axioms.
-		public Set getModuleFromSignature(Set allAxioms, Set sig, Map axSignature){
+		public Set getModuleFromSignature(Set sig, Map axSignature){
 			Set result = new HashSet();
-			Iterator iter = allAxioms.iterator();
+			Iterator iter = axSignature.keySet().iterator();
 			while(iter.hasNext()){
 	        	OWLObject axiom = (OWLObject)iter.next(); 
 	        	Set sigAxiom = new HashSet();
-				if(axSignature.containsKey(axiom))
-					sigAxiom = (Set)axSignature.get(axiom);
-				else
-					System.out.println("Error in signature");
+				sigAxiom = (Set)axSignature.get(axiom);
 				if(sig.containsAll(sigAxiom)){
-					
 					result.add(axiom);
 				}
 			}
@@ -1192,76 +1296,37 @@ public class Segmentation {
 		
 		//Returns the Set of Axioms in the Module. This method is currently
 		//used only in the SWOOP UI, but not in the classification algorithm.
-		public OWLOntology getModule(Set allAxioms, Set si, Map axSignature, Map sigToAxioms, URI uriOntology, URI uriClass) throws Exception{
+		public OWLOntology getModule(Set allAxioms, Set si, Map axSignature, Map sigToAxioms, URI uriOntology, OWLClass cl) throws Exception{
 			
 			ShortFormProvider shortFormProvider = new DefaultShortFormProvider();
+			//
+			String name = "";
+			Iterator i = si.iterator();
+			while(i.hasNext()){
+				OWLEntity e = (OWLEntity)i.next();
+				name = name +  shortFormProvider.shortForm(e.getURI()) + "_";
+				
+			}
+			URI uriModule = new URI("http://" + shortFormProvider.shortForm(uriOntology)  + "-" + name  +".owl");
+			//
 			
+			/*
+			URI uriClass = cl.getURI();
 			URI uriModule= new URI("http://" + shortFormProvider.shortForm(uriOntology)  + "-" + shortFormProvider.shortForm(uriClass)  +".owl");
+			*/
 			
 			//Get signature of the module
 			Map moduleMap = new HashMap();
 			Set sigModule = new HashSet();
-			sigModule.addAll(expandSignature(si,sigToAxioms, axSignature, moduleMap));
+			sigModule.addAll(expandSignature(cl,si,sigToAxioms, axSignature, moduleMap));
 			//
 			Set axiomsInModule = new HashSet();
-			axiomsInModule =  this.getModuleFromSignature(allAxioms,sigModule,axSignature);
+			axiomsInModule =  this.getModuleFromSignature(sigModule,axSignature);
 			OWLOntology module = this.getOntologyFromAxioms(axiomsInModule, uriModule);	
 			return module;
 		}
 		
-		//Returns the set of symbols used in a concept description
-		/*
-		public Set signatureOf(OWLDescription desc) throws OWLException{
-			Set result = new HashSet();
-			if (desc instanceof OWLClass){
-				result.add(desc);		
-				return result;
-			}
-			if (desc instanceof OWLNot){
-				return(signatureOf(
-						((OWLNot)desc).getOperand()));
-			}
-			if (desc instanceof OWLAnd){
-				Iterator iter = ((OWLAnd)desc).getOperands().iterator();
-				while(iter.hasNext()){
-					OWLDescription d = (OWLDescription)iter.next();
-					result.addAll(signatureOf(d));
-				}
-				return result;
-			}
-			
-			if (desc instanceof OWLOr){
-				Iterator iter = ((OWLOr)desc).getOperands().iterator();
-				while(iter.hasNext()){
-					OWLDescription d = (OWLDescription)iter.next();
-					result.addAll(signatureOf(d));
-				}
-				return result;
-			}
-			
-			if(desc instanceof OWLRestriction){
-				result.add(((OWLRestriction)desc).getProperty());
-				if(desc instanceof OWLObjectQuantifiedRestriction)
-					result.addAll(signatureOf(((OWLObjectQuantifiedRestriction)desc).getDescription()));
-				return result;
-			}
-			
-				
-			return result;
-		}
-		*/
-	/*
-		public Set signatureOf(Set s) throws OWLException{
-			Set result = new HashSet();
-			Iterator iter = s.iterator();
-			while(iter.hasNext()){
-				OWLDescription desc = (OWLDescription)iter.next();
-				result.addAll(signatureOf(desc));
-			}
-			return result;
-					
-		}
-	*/	
+		
 	
 		
 //		 returns the entities in the signature of the axiom (Taken from SwoopModel)
@@ -1309,79 +1374,8 @@ public class Segmentation {
 		writer.close();
 		return true;
 		}
-		/*
-		public boolean saveOntologyToDisk (OWLOntology ont, String path) throws FileNotFoundException, IOException, OWLException{
-	        File wkspcFile = new File(path);
-			
-			//swoopModel.setWkspcFile(wkspcFile); 
-			ObjectOutputStream outs = new ObjectOutputStream(
-					new FileOutputStream(wkspcFile));
-			
-			CorrectedRDFRenderer rend = new CorrectedRDFRenderer();
-			StringWriter st = new StringWriter();
-			rend.renderOntology(ont, st);
-			String result = st.toString();
-			outs.writeObject(st.getBuffer().toString());
 		
-				// also add imports information to importChanges
-				//for (Iterator impOntIter = ont.getIncludedOntologies().iterator(); impOntIter.hasNext();) {
-					//OWLOntology impOnt = (OWLOntology) impOntIter.next();
-					//ImportChange change = new ImportChange(ont.getURI(),impOnt.getURI());
-					//importChanges.add(change);
-				//}
-			
-			return true;
-		}
-*/
-		/*
-		public Set signatureOf(OWLClassAxiom ax) throws OWLException{
-			Set result = new HashSet();
-			if (ax instanceof OWLSubClassAxiom){
-				OWLDescription sup = ((OWLSubClassAxiom)ax).getSuperClass();
-				OWLDescription sub = ((OWLSubClassAxiom)ax).getSubClass();
-				result.addAll(signatureOf(sup));
-				result.addAll(signatureOf(sub));
-				return result;
-			}
-			if (ax instanceof OWLEquivalentClassesAxiom){
-				Set equiv = ((OWLEquivalentClassesAxiom)ax).getEquivalentClasses();
-				result.addAll(signatureOf(equiv));
-			}
-			if (ax instanceof OWLDisjointClassesAxiom){
-				Set disjoint = ((OWLDisjointClassesAxiom)ax).getDisjointClasses();
-				result.addAll(signatureOf(disjoint));
-			}
-			
-			return result;
-		}
-*/
-		//
-		//Displays an OWL ontology in the console
-		//
-		public String renderModule(OWLOntology module) throws OWLException{
-			String output;
-			StringWriter rdfBuffer = new StringWriter();
-			CorrectedRDFRenderer rdfRenderer = new CorrectedRDFRenderer();
-			rdfRenderer.renderOntology(module, rdfBuffer);
-			output = rdfBuffer.toString();
-			return output;
-		}
-		
-		
-		
-		/*
-		public void renderSignature(Set si) throws OWLException{
-			Iterator iter = si.iterator();
-			System.out.println("****Signature of the Axiom*******************");
-			while(iter.hasNext()){
-				OWLEntity ent = (OWLEntity)iter.next();
-				System.out.println(ent.getURI().toString());
-					
-			}
-			System.out.println("***End Signature of the Axiom********************");
-			
-		}
-*/
+	
 
 		//This method prunes the modules that are redundant for
 		//classification
@@ -1420,38 +1414,5 @@ public class Segmentation {
 			return signatureTable;
 		}
 
-		/*
-		public Map pruneModulesTest(Map signatureTable) {
-		    int largeModulesPruned = 0;
-		    int smallModulesPruned = 0;
-			Set toRemove = new HashSet();
-		    Map auxMap = new HashMap();
-		    //Generate a copy of the Map
-		    auxMap.putAll(signatureTable);
-		  //  Set usedSignature = new HashSet();
-		    Iterator iter = signatureTable.keySet().iterator();
-		    while(iter.hasNext()){
-		    	OWLEntity ent = (OWLEntity)iter.next();
-		    	Iterator it = auxMap.keySet().iterator();
-		    	while(it.hasNext()){
-		    		OWLEntity entAux = (OWLEntity)it.next();
-		    		if(!entAux.equals(ent)){
-		    			Set sig = (Set)auxMap.get(entAux);
-		    			if(sig.contains(ent)){
-		    				toRemove.add(ent);
-		    				if(sig.size()>200)
-		    					largeModulesPruned++;
-		    				else
-		    					smallModulesPruned++;
-		    			}
-		    		}
-		    		
-		    	}
-		    	    	
-		    }
-		    System.out.println("Modules to remove: " +toRemove.size());
-		    System.out.println("Large modules pruned " + largeModulesPruned);
-			return auxMap;
-		}
-*/
+	
 }

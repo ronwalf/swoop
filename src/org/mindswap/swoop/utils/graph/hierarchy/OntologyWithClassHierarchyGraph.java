@@ -373,7 +373,8 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 	/*
 	 * Reads in an OWLOntology and build a ontology node with a class tree
 	 * inside, where the tree represents the subclass tree structure :) The
-	 * class tree is the inferred tree, using the current SWOOP reasoner.
+	 * class tree is a tree by current SWOOP reasoner (so told with no reasoner,
+	 * but inferred if with Pellet).
 	 *  
 	 */
 	private OntologyGraphNode buildOntologyNode(OWLOntology ontology) {
@@ -437,8 +438,8 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 				if (set.contains(c))
 					continue;
 
-				SortedSet sortedSet = orderedEntities(set);
-				ClassTreeNode node = buildTreeNode(ontology, sortedSet, depth + 1);
+				//SortedSet sortedSet = orderedEntities(set);
+				ClassTreeNode node = buildTreeNode(ontology, set, depth + 1);
 				
 				// do not add owl:Nothing to the tree
 				if (node != null) 
@@ -462,7 +463,8 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 		return null;
 	}
 
-	private SortedSet orderedEntities(Set entities) {
+	private SortedSet orderedEntities(Set entities) 
+	{
 		SortedSet ss = new TreeSet(EntityComparator.INSTANCE);
 		ss.addAll(entities);
 		return ss;

@@ -87,18 +87,22 @@ public class TestSaveModules {
 	    
 	    //Load Input
 		File ontFile1 = null; 
-		boolean dualConcepts = true;
-		boolean dualRoles = true;
+		
+		//Dual Concepts and Dual Roles
+		boolean dualConcepts = false;
+		boolean dualRoles = false;
+		//
+		
 		//String fileName1 = "C:/ontologies/galen.lisp";
-		String fileName1 = "C:/ontologies/default-GALEN1.owl";
+		String fileName1 = "C:/ontologies/Snomed/SnoMed-krss/snomedct-20050209.krss.txt";
 	    ontFile1 = new File(fileName1);
 	    String filePath = ontFile1.toURI().toString();
         URI uri1 = new URI(filePath);
         System.out.println("Parsing");
         //Reading an ontology in KRSS
-        //KRSSConverter converter = new KRSSConverter();
-        //OWLOntology ontology = converter.readTBox( fileName1);
-        OWLOntology ontology = swoopModel.addOntology(uri1);
+        KRSSConverter converter = new KRSSConverter();
+        OWLOntology ontology = converter.readTBox( fileName1);
+        //OWLOntology ontology = swoopModel.addOntology(uri1);
         System.out.println("Done Parsing");
         
         URI uriOriginal = ontology.getLogicalURI();
@@ -106,7 +110,7 @@ public class TestSaveModules {
 	    
         //Create Segmentation Object
 	
-        Segmentation seg = new Segmentation(ontology,!dualConcepts,!dualRoles);
+        Segmentation seg = new Segmentation(ontology,dualConcepts,dualRoles);
 	    //
 	    Set allClasses = ontology.getClasses();  
 		Set allProperties = ontology.getObjectProperties();
@@ -116,31 +120,30 @@ public class TestSaveModules {
 		allEntities.addAll(allProperties);
 	    
 		System.out.println("Getting the axioms in the ontology");
-		Set allAxioms = seg.getAxiomsInOntology(ontology);
+		Set allAxioms = seg.getAllAxioms();
 		System.out.println("Total number of axioms in the Ontology: " + allAxioms.size());
-		System.out.println("Getting signature of axioms");
-		Map axSignature = seg.axiomsToSignature(allAxioms);
-		System.out.println("Got signature of the axioms");
-		System.out.println("Creating Map from concept names to axioms");
-		Map sigToAxioms = seg.signatureToAxioms(allAxioms, allEntities);
+		Map axSignature = seg.getAxiomsToSignature();
+		Map sigToAxioms = seg.getSignatureToAxioms();
 		System.out.println("DONE");
 		
 		
 		System.out.println("Creating Signature Dependency Map");
 		Map signatureTable = new HashMap();
-		signatureTable = seg.computeSignatureDependenciesOptimized(allAxioms, sigToAxioms, axSignature, allClasses);
+		boolean save = true;
+		signatureTable = seg.computeSignatureDependenciesOptimized(allAxioms, sigToAxioms, axSignature, allClasses, save);
 		System.out.println("DONE Creating Signature Dependency Map");
 		System.out.println("********");
 		
-				
+		/*		
 		System.out.println("Pruning modules");
 		signatureTable =seg.pruneModules(signatureTable);
 		System.out.println("Done pruning");
 		System.out.println("Number of modules after pruning: " + signatureTable.keySet().size() );
 		System.out.println("********");
 		System.out.println("Classifying Modules " );
+		*/
 		
-		
+		/*
 		Iterator iter = signatureTable.keySet().iterator();
 		int j = 0;
 		while (iter.hasNext()){
@@ -150,7 +153,8 @@ public class TestSaveModules {
 			sigModule = (Set)signatureTable.get(ent);
 			Set axiomsInModule = new HashSet();
 			axiomsInModule =  seg.getModuleFromSignature(allAxioms,sigModule,axSignature);
-			URI uriModule= new URI("http://www.mindswap.org/testModule" + j +".owl");
+			//URI uriModule= new URI("http://www.mindswap.org/testModule" + j +".owl");
+			URI uriModule= new URI("http://" + shortFormProvider.shortForm(ent.getURI()) +".owl" );
 			System.out.println("Getting module");
 			OWLOntology ont = seg.getOntologyFromAxioms(axiomsInModule, uriModule);
 			System.out.println("Module size (number of classes):" + ont.getClasses().size());
@@ -160,7 +164,7 @@ public class TestSaveModules {
 			seg.saveOntologyToDisk(ont,path);
 			System.out.println("Saved Module: " + j);
 		}
-		
+		*/
 	
 	}
 	

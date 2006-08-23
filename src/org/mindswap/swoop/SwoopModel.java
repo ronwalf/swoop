@@ -245,6 +245,10 @@ public class SwoopModel implements ShortFormProvider {
 	public RulesExpressivity ruleExpr = null;
 	private Preferences preferences;
 	
+	//Added for Segmentation
+	public Map segmentation;//A mapping from each ontology object to its segmentation object.
+	//
+	
     public SwoopModel() {
         
     	ontologies = new Hashtable();
@@ -267,7 +271,11 @@ public class SwoopModel implements ShortFormProvider {
     	changeMap = new HashMap();
     	changedOntologies = new HashSet();
     	versionRepository = new HashMap();
-
+    	
+    	//Added for Segmentation
+    	segmentation = new HashMap();
+    	//
+    	
     	ontStatMap = new HashMap();  
     	preferences = Preferences.userNodeForPackage(this.getClass());
 //    	**************************************
@@ -286,6 +294,13 @@ public class SwoopModel implements ShortFormProvider {
 	}
 
     
+    public Map getSegmentation(){
+    	return segmentation;
+    }
+    
+    public void setSegmentation(Map seg){
+    	segmentation = seg;
+    }
     
     public void addAnnotatedObjectURI(URI annObjURI) {
     	this.annotatedObjectURIs.add(annObjURI);

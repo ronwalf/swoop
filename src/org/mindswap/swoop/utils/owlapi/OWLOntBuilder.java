@@ -205,6 +205,8 @@ public class OWLOntBuilder extends OWLObjectVisitorAdapter implements SwoopRende
 					this.visit((OWLPropertyDomainAxiom)axiom);
 				if(axiom instanceof OWLObjectPropertyRangeAxiom)
 					this.visit((OWLObjectPropertyRangeAxiom)axiom);
+				if(axiom instanceof OWLDataPropertyRangeAxiom)
+					this.visit((OWLDataPropertyRangeAxiom)axiom);
 				if(axiom instanceof OWLInversePropertyAxiom)
 					this.visit((OWLInversePropertyAxiom)axiom);
 			}
