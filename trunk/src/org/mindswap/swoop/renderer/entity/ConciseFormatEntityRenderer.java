@@ -73,6 +73,7 @@ import org.mindswap.swoop.utils.SetUtils;
 import org.mindswap.swoop.utils.XPointers;
 import org.mindswap.swoop.utils.change.BooleanElementChange;
 import org.mindswap.swoop.utils.change.EnumElementChange;
+import org.mindswap.swoop.utils.external.ExternalRuleSubmitter;
 import org.mindswap.swoop.utils.owlapi.CorrectedRDFRenderer;
 import org.mindswap.swoop.utils.owlapi.OWLDescriptionFinder;
 import org.mindswap.swoop.utils.owlapi.OWLOntBuilder;
@@ -3315,10 +3316,12 @@ public List handlePublishLink(String hLink) throws OWLException {
 		String hashCode = hLink.substring(pos1 + 1, pos2);
 		String titleCode = hLink.substring(pos2 + 1, hLink.length());
 		Object obj = OWLDescHash.get(hashCode);
-
+		OWLRule rule = (OWLRule) obj;
+		
 		if ( titleCode.startsWith( "RULE" ) ) {
-		    System.out.println( "Deleting Rule" );
-		    String n3 = swoopModel.getRuleExpr().publishRulesToPychinko();
+		    //System.out.println( "Deleting Rule" );
+		    //String n3 = swoopModel.getRuleExpr().toN3();
+		    ExternalRuleSubmitter submitter = new ExternalRuleSubmitter( swoopModel, rule );
 		}
 		
 		//no changes to return

@@ -1119,33 +1119,86 @@ public class RulesExpressivity implements SwoopModelListener, Cloneable {
 				else
 					n3 += "<" + consequentPredicate + ">" + " rdfs:label " + "\"" + guessConsequentLabel( consequent ) + "\" .";
 				
-			}		
-				
-			//PITSubmitter p = new PITSubmitter(n3); 
-			//p.submit(); 
-						
-			
-			/* HttpURL hrl =
-                new HttpURL("http://profilesinterror.mindswap.org/rules/allRules");
-            // hrl.setUserinfo("mindswap","rover");
-            WebdavResource wdr = new WebdavResource(hrl);
-               // new WebdavResource(hrl);
-            */
-			
+			}
 		}
 		catch (Exception e) {
 			System.out.println(e.getMessage());
 			n3 += "\nERROR!";
 		}
-		System.out.println(n3);
-		//do an HTTP PUT
-		
 		return n3;
-		
-		// HTTP-PUT this on the profilesinterror.mindswap.org server
-		
 	}
+
+
+	public String toN3( OWLRule rule )
+	{		
+		// need to print out header code here
+		String n3 = "@prefix log: <http://www.w3.org/2000/10/swap/log#>.\n" +				
+				"@prefix str: <http://www.w3.org/2000/10/swap/string#>.\n" + 
+				"@prefix owl: <http://www.w3.org/2002/07/owl#>.\n" +
+				"@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.\n" +
+				"@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.\n" +
+				"@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.\n";
 		
+		try {
+
+			n3 += "\n{ ";
+			//  print out the whole URI for predicates and classes
+			//  fragments for avariables only
+			HashSet antecedents  = (HashSet) rule.getAntecedents();
+			Iterator antIterator = antecedents.iterator();
+			while (antIterator.hasNext()) {
+				OWLRuleAtom ant = (OWLRuleAtom) antIterator.next();
+				n3 += renderRuleAtom(ant);
+			}
+											
+			// --------consequents
+			n3 += "}\n=> \n{";				
+			
+			OWLRuleAtom consequent = (OWLRuleAtom) rule.getConsequents().iterator().next();
+			n3 += renderRuleAtom(consequent);
+			n3 += "}.\n";
+							
+			String consequentPredicate = getURIString( consequent );
+			String label = getLabel( rule );
+			n3 += "<" + consequentPredicate + ">" + " rdfs:label " + "\"" + label + "\" .";
+		}
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+			n3 += "\nERROR!";
+		}
+		return n3;		
+	}
+	
+	public String getPredicate( OWLRule rule )
+	{
+		String consequentPredicate = null;
+		try
+		{
+			OWLRuleAtom consequent = (OWLRuleAtom) rule.getConsequents().iterator().next();
+			consequentPredicate = getURIString( consequent );
+		}
+		catch ( Exception e )
+		{ e.printStackTrace(); }
+		return consequentPredicate;
+	}
+	
+	public String getLabel( OWLRule rule )
+	{			
+		String label = null;
+		try
+		{
+			OWLRuleAtom consequent = (OWLRuleAtom) rule.getConsequents().iterator().next();
+			label = getConsequentLabel( consequent );
+			if ( label == null )
+				label = guessConsequentLabel( consequent );
+			}
+		catch ( Exception e )
+		{			
+			e.printStackTrace();
+		}
+		return label;
+	}
+	
 	/*
 	 * Returns label for the given consequent (corresponding to SWOOP's rdfs:label for that entity)
 	 *   If it doesn't exist, it returns null;
