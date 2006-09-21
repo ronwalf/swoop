@@ -78,7 +78,7 @@ public class ClassTreeNode
 	private OntologyGraphNode myOntologyGraphNode = null; // init in sortChildren(....)
 	private GraphColorScheme myColorScheme = null;        // init in sortChildren(....)
 	
-	private AffineTransform myXform;
+	private AffineTransform myLocalXForm;
 	private AffineTransform myGlobalXform;
 	
 	private int myDepth = 0;
@@ -261,7 +261,7 @@ public class ClassTreeNode
 
 	public Point2D.Double getLocalCenter()
 	{ return new Point2D.Double(this.localX, this.localY);	}
-
+	
 	public Point2D.Double computeGlobalCenter()
 	{
 		Point2D point = new Point2D.Double(0,0);
@@ -288,8 +288,10 @@ public class ClassTreeNode
 	public void setRotationAngle( double angle)
 	{ myRotationAngle = angle; }
 	
-	public void setAffineTransform( AffineTransform form )
-	{ myXform = form; }
+	public void setLocalXForm( AffineTransform form )
+	{ myLocalXForm = form; }
+	public AffineTransform getLocalXForm()
+	{ return myLocalXForm; }
 	
 	// set global transform (which transforms (0,0) to this node's center)
 	//  and also set the global center
@@ -393,7 +395,7 @@ public class ClassTreeNode
 			
 			try
 			{
-				xform = myXform.createInverse();
+				xform = myLocalXForm.createInverse();
 			}
 			catch( Exception e)
 			{ e.printStackTrace(); }

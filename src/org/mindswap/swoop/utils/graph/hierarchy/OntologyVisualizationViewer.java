@@ -848,17 +848,25 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 		this.renderingHints = renderingHints;
 	}
 
-	protected synchronized void paintComponent(Graphics g) {
+	protected synchronized void paintComponent(Graphics g) 
+	{
 		start();
 		super.paintComponent(g);
 
-		Graphics2D g2d = (Graphics2D) g;
+		//Graphics2D g2d = (Graphics2D) g;		
+		//long tic = System.currentTimeMillis();
 		renderGraph();
-		g2d.drawImage(offscreen, null, 0, 0);
-
+		
+		// tw7: removed the following line for optimization 
+		// (not really sure what it does anyway)
+		//g2d.drawImage(offscreen, null, 0, 0);
+		//long toc = System.currentTimeMillis();
+		//System.out.println( "Time taken to render: " + (toc - tic) + " milisecond" );
 	}
 
-	protected void renderGraph() {
+	protected void renderGraph() 
+	{
+		
 		if (offscreenG2d == null)
 			return;
 		offscreenG2d.setRenderingHints(renderingHints);
