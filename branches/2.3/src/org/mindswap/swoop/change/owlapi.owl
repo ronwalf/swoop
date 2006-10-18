@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<!DOCTYPE owl [
+<!ENTITY owlapi "http://www.mindswap.org/dav/ontologies/owlapi.owl#">
+<!ENTITY dc "http://purl.org/dc/elements/1.1/">
+<!ENTITY xsd "http://www.w3.org/2001/XMLSchema#">
+<!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<!ENTITY owl "http://www.w3.org/2002/07/owl#">
+<!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#">
+]>
+<rdf:RDF
+ xmlns:owlapi="http://www.mindswap.org/dav/ontologies/owlapi.owl#"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+ xml:base="http://www.mindswap.org/dav/ontologies/owlapi.owl"
+>
+<owl:Ontology rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl">
+</owl:Ontology>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddCLASS">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddDATATYPE_PROPERTY">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddDataPropertyInstance">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddDataPropertyRange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddDifferentIndividuals">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddDisjointClasses">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddDomain">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddEntity">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddEnumerationElement">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddEquivalentClass">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddEquivalentProperty">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddINDIVIDUAL">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddImport">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddIndividualClass">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddIntersectionElement">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddOBJECT_PROPERTY">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddObjectPropertyInstance">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddObjectPropertyRange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddSameIndividuals">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddSubClassAxiom">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddSuperClass">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddSuperProperty">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#AddUnionElement">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#Class">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#ClassChange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#Description">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#Entity">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#Individual">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#IndividualChange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#OntologyChange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#Property">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#PropertyChange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveCLASS">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveDATATYPE_PROPERTY">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveDataPropertyInstance">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveDataPropertyRange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveDifferentIndividuals">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveDisjointClasses">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveDomain">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveEntity"> 
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveEnumerationElement">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveEquivalentClass">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveEquivalentProperty">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveINDIVIDUAL">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveImport">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveIndividualClass">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveIntersectionElement">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveOBJECT_PROPERTY">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveObjectPropertyInstance">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveObjectPropertyRange">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveSameIndividuals">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveSubClassAxiom">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveSuperClass">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveSuperProperty">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RemoveUnionElement">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#RevertCheckpoint">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#SaveCheckpoint">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#SetFunctional">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#SetInverseFunctional">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#SetSymmetric">
+</owl:Class>
+<owl:Class rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#SetTransitive">
+</owl:Class>
+
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument1">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument10">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument11">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument2">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument3">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument4">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument5">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument6">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument7">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument8">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#argument9">
+</owl:DatatypeProperty>
+<owl:DatatypeProperty rdf:about="http://www.mindswap.org/dav/ontologies/owlapi.owl#hasClass">
+</owl:DatatypeProperty>
+
+
+</rdf:RDF>
