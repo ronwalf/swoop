@@ -75,6 +75,7 @@ import org.mindswap.swoop.renderer.SwoopCellRenderer;
 import org.mindswap.swoop.renderer.entity.ConciseFormatEntityRenderer;
 import org.mindswap.swoop.renderer.entity.OWLObjectContainer;
 import org.mindswap.swoop.utils.SetUtils;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.owlapi.EntailmentChecker;
 import org.mindswap.swoop.utils.owlapi.OWLDescriptionFinder;
 import org.mindswap.swoop.utils.owlapi.OWLOntBuilder;
@@ -821,12 +822,12 @@ public class RepairFrame extends JFrame implements HyperlinkListener, ListSelect
 						URI uri = new URI(hLink);
 						// popup entity
 						// if entity already displayed, return
-						if (uri.equals(swoopModel.selectedOWLObject.getURI())) return;
+						if (uri.equals(swoopModel.getSelectedObject().getURI())) return;
 						if (swoopModel.getOntologyURIs().contains(uri)) {
 							swoopHandler.ontDisplay.selectOntology(swoopModel.getOntology(uri));
 						}
 						else {
-							swoopHandler.termDisplay.selectEntity(hLink);
+							new SwoopLoader(swoopHandler, swoopModel).selectEntity(hLink);
 							// popup entity
 							ConciseFormatEntityRenderer cfRend = new ConciseFormatEntityRenderer();
 							boolean temp = swoopModel.getEditorEnabled();

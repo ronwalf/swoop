@@ -187,7 +187,7 @@ public class SwoopModel implements ShortFormProvider {
     private boolean highlightCode = true; // highlight entity in source code
     private boolean enableRules = false; // enable definition rules
     public static int changeSharingMethod = RDFXML_SER; // change sharing method for Ontology Change sets (RDF/XML or Java objects)
-    private String fontSize = "3";
+    private int fontSize = 3;
     private String fontFace = "Verdana";
     private String treeThreshold = "200"; // number below this - tree is fully expanded
     private String termListFilter = "Show All";
@@ -202,7 +202,7 @@ public class SwoopModel implements ShortFormProvider {
     private Map ontologySettings; // key - uri, value - List of settings (imports, qnames, reasoner) in that order
     protected OWLEntity selectedEntity;
     protected OWLOntology selectedOntology;
-    public OWLNamedObject selectedOWLObject;
+    protected OWLNamedObject selectedOWLObject;
     private List listeners;
     private ShortFormProvider shortForms;
     private List uncommittedChanges, committedChanges;    
@@ -1279,6 +1279,18 @@ public class SwoopModel implements ShortFormProvider {
 		return selectedOntology;
 	}
    	
+	/**
+	 * Return the currently selected object, whether it is an Entity or an Ontology.
+	 * @return
+	 */
+	public OWLNamedObject getSelectedObject() {
+		OWLNamedObject selected = getSelectedEntity();
+		if (selected == null) {
+			selected = getSelectedOntology();
+		}
+		return selected;
+	}
+	
 	public void setSelectedEntity(OWLEntity entity) {
    		
 		this.selectedEntity = entity;
@@ -1286,6 +1298,10 @@ public class SwoopModel implements ShortFormProvider {
    		notifyListeners(event);  
    	}
    	
+	/**
+	 * Returns the currrently selected entity.  Returns null if an ontology is currently selected.
+	 * @return 
+	 */
    	public OWLEntity getSelectedEntity() {
    		return selectedEntity;
    	}
@@ -1683,14 +1699,40 @@ public class SwoopModel implements ShortFormProvider {
 	}
 	
 	
+	/**
+	 * Returns the prefered font size.  THIS DOES NOT CORRESPOND TO POINT SIZE!.
+	 * Use getFontPt() for that.
+	 * @return
+	 */
 	public String getFontSize() {
-		return this.fontSize;
+		return new Integer(this.fontSize).toString();
 	}
 	
-	public void setFontSize(String size) {
+	/**
+	 * Returns the preferred point size for fonts.
+	 * @return
+	 */
+	public int getFontPt() {
+		return 5+2*this.fontSize;
+	}
+	
+	/**
+	 * Set the font size.  The corresponding point size is 5+2*size
+	 * @param size
+	 */
+	public void setFontSize(int size) {
 		this.fontSize = size;
 		// also refresh display to show effect
 		notifyListeners(new ModelChangeEvent(this, ModelChangeEvent.FONT_CHANGED, selectedOntology));		
+	}
+	
+	/**
+	 * Create and return a font corresponding to the set preferences.
+	 * @return
+	 */
+	public Font getFont() {
+		Font font = new Font(getFontFace(), Font.PLAIN, getFontPt());
+		return font;
 	}
 	
 	public String getTreeThreshold() {
@@ -1846,7 +1888,7 @@ public class SwoopModel implements ShortFormProvider {
 			
 			this.showIcons = getBooleanPref(prefs, "showIcons", this.showIcons);
 			this.showDivisions = getBooleanPref(prefs, "showDivisions", this.showDivisions);
-			this.fontSize = getStringPref(prefs, "fontSize", this.fontSize);
+			this.fontSize = getIntegerPref(prefs, "fontSize", this.fontSize);
 			this.fontFace = getStringPref(prefs, "fontFace", this.fontFace);
 			this.setEditorEnabled(getBooleanPref(prefs, "editorEnabled", this.editorEnabled));
 			
@@ -1901,7 +1943,7 @@ public class SwoopModel implements ShortFormProvider {
 			
 			this.showIcons = preferences.getBoolean("showIcons", this.showIcons);
 			this.showDivisions = preferences.getBoolean("showDivisions", this.showDivisions);
-			this.fontSize = preferences.get("fontSize", this.fontSize);
+			this.fontSize = preferences.getInt("fontSize", this.fontSize);
 			this.fontFace = preferences.get("fontFace", this.fontFace);
 			this.setEditorEnabled(preferences.getBoolean("editorEnabled", this.editorEnabled));
 			
@@ -1958,7 +2000,7 @@ public class SwoopModel implements ShortFormProvider {
 		prefs.put("enableAutoRetrieve", String.valueOf(enableAutoRetrieve));
 		prefs.put("highlightCode", String.valueOf(highlightCode));
 		prefs.put("changeSharingMethod", String.valueOf(changeSharingMethod));
-		prefs.put("fontSize", fontSize);
+		prefs.put("fontSize", String.valueOf(fontSize));
 		prefs.put("fontFace", fontFace);
 		prefs.put("treeThreshold", treeThreshold);
 		prefs.put("termListFilter", termListFilter);
@@ -2014,7 +2056,7 @@ public class SwoopModel implements ShortFormProvider {
 		
 		preferences.putBoolean("showIcons", this.showIcons);
 		preferences.putBoolean("showDivisions", this.showDivisions);
-		preferences.put("fontSize", this.fontSize);
+		preferences.putInt("fontSize", this.fontSize);
 		preferences.put("fontFace", this.fontFace);
 		preferences.putBoolean("editorEnabled", this.editorEnabled);
 		
@@ -2341,7 +2383,9 @@ public class SwoopModel implements ShortFormProvider {
 		try {
 			// if ontology is currently selected, return the current value of show_imports
 			// because the archived value was the one when the ont selection changed last
-			if (ont.getURI().equals(this.selectedOntology.getURI())) return this.show_imports;
+			if ((this.selectedOntology != null) && 
+					ont.getURI().equals(this.selectedOntology.getURI())) 
+				return this.show_imports;
 			
 			List settings = this.getOntSetting(ont);
 			if (settings.size()>0 && settings.get(0).toString().equals("true")) importSetting = true;

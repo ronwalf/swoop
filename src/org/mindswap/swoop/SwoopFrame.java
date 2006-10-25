@@ -61,7 +61,6 @@ import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.Box;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
@@ -103,6 +102,7 @@ import org.mindswap.swoop.renderer.ontology.SwoopOntologyInfo;
 import org.mindswap.swoop.utils.Bookmark;
 import org.mindswap.swoop.utils.QueryInterface;
 import org.mindswap.swoop.utils.SwoopCache;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.SwoopPreferences;
 import org.mindswap.swoop.utils.VersionInfo;
 import org.mindswap.swoop.utils.graph.hierarchy.ClassHierarchyGraph;
@@ -117,6 +117,7 @@ import org.mindswap.swoop.utils.ui.BookmarkComparator;
 import org.mindswap.swoop.utils.ui.BrowserControl;
 import org.mindswap.swoop.utils.ui.ExceptionDialog;
 import org.mindswap.swoop.utils.ui.LaunchBar;
+import org.mindswap.swoop.utils.ui.LocationBar;
 import org.mindswap.swoop.utils.ui.SwingWorker;
 import org.mindswap.swoop.utils.ui.SwoopFileFilter;
 import org.mindswap.swoop.utils.ui.SwoopHTMLFileFilter;
@@ -153,7 +154,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	//*****************************************************
 	private JCheckBoxMenuItem viewSideBarMenu, viewChangeBarMenu, viewOptionBarMenu, showEnableRules;
 	private JCheckBox showChangeBarChk, showDivisionsChk;
-	private JButton addrBtn;
+
 	private JSplitPane rendererPanel, sidePanel, centerPanel, rendererAdvancedPane;
 	private JPanel optionPanel, ontPanel;
 	
@@ -180,13 +181,14 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	public JTabbedPane advancedTabPane;
 	public JCheckBoxMenuItem launchBarMenu;;
 	public JMenuItem ontRemoveMItem;
-	public JComboBox addrCombo;
-	public String addrComboString;
+	private LocationBar locationBar;
 	private HashMap fileOntMap; // map: ontology URI --> local file location
+	private SwoopLoader loader;
 	
 	public SwoopFrame(SwoopModel swoopModel) {
 
 		this.swoopModel = swoopModel;
+		loader = new SwoopLoader(this, swoopModel);
 		this.changeLog = new ChangeLog(this, swoopModel);
 		this.launchBar = new LaunchBar(this);
 		this.fileOntMap = new HashMap();
@@ -236,31 +238,8 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		termDisplay = new TermsDisplay(this, swoopModel);
 
 		// add row panel for Address URL bar
-		JPanel rowPanelAddr = new JPanel();
-		JLabel addrLbl = new JLabel("Address: ");
-		addrLbl.setFont(tahoma);
-		addrCombo = new JComboBox();
-		addrCombo.setFont(new Font(swoopModel.getFontFace(), Font.PLAIN, 11));
-		//addrCombo.addItemListener(this); // don't add this - creates weird listener problems
-		addrCombo.addActionListener(this);
-		addrCombo.setEditable(true);
-		addrCombo.setSelectedItem("");
-		addrBtn = new JButton("Browse Local");
-		addrBtn.setFont(tahoma);
-		addrBtn.addActionListener(this);
-		rowPanelAddr.setLayout(new BorderLayout());
-		rowPanelAddr.add(addrLbl, "West");
-		rowPanelAddr.add(addrCombo, "Center");
-		JSplitPane topPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		JPanel histBtnPane = new JPanel();
-		histBtnPane.setLayout(new GridLayout(1, 6));
-		histBtnPane.add(termDisplay.prevBtn);
-		histBtnPane.add(termDisplay.nextBtn);
-		topPanel.setLeftComponent(histBtnPane);
-		topPanel.setRightComponent(rowPanelAddr);
-		topPanel.setDividerLocation(200);
-		topPanel.setEnabled(false);
-
+		locationBar = new LocationBar(this, swoopModel);
+		
 		// create side panel containing ontList and entityTree/List
 		sidePanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		ontPanel = new JPanel();
@@ -320,7 +299,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		//                centerPanel.setOneTouchExpandable(true);
 
 		// add panels to mainPanel
-		mainPanel.add(topPanel, "North");
+		mainPanel.add(locationBar, "North");
 		mainPanel.add(centerPanel, "Center");
 
 		// add mainPanel to contentPane
@@ -809,7 +788,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 				ActionEvent.ALT_MASK));
 		prevMenu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				termDisplay.previousHistory();
+				locationBar.previousHistory();
 			}
 		});
 		shortcutsMenu.add(prevMenu);
@@ -819,7 +798,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 				ActionEvent.ALT_MASK));
 		nextMenu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				termDisplay.nextHistory();
+				locationBar.nextHistory();
 			}
 		});
 		shortcutsMenu.add(nextMenu);
@@ -857,8 +836,6 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 				swoopModel.removeOntology(uri);
 			}
 
-			// clear address combo
-			addrCombo.removeAllItems();
 
 			// clear changes cache
 			swoopModel.getChangesCache().removeAllChanges();
@@ -885,7 +862,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		}
 	}
 
-	public void disableMenuOptions() {
+	protected void disableMenuOptions() {
 		// disable menu options
 		saveWkspMItem.setEnabled(false);
 		saveAsMItem.setEnabled(false);
@@ -898,7 +875,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		exportHTMLMItem.setEnabled(false);
 	}
 
-	public void enableMenuOptions() {
+	protected void enableMenuOptions() {
 		saveWkspMItem.setEnabled(true);
 		saveAsMItem.setEnabled(true);
 		ontSaveMItem.setEnabled(true);
@@ -1488,10 +1465,6 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			viewSource(1); // 1 is for AS format
 		}
 		else
-		if (e.getSource() == addrCombo) {
-			addressChanged();
-		}
-		else
 		if (e.getSource() == addResHoldMItem) {
 
 			termDisplay.addEntityToResourceHolder();
@@ -1782,8 +1755,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 					// jump to currently selected entity source code
 					if (swoopModel.getSelectedEntity() != null) {
 
-						String entityURI = addrCombo.getSelectedItem()
-								.toString();
+						String entityURI = swoopModel.getSelectedEntity().toString();
 
 						// select entity defn.
 						// determine type of entity
@@ -1844,9 +1816,10 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	public void addBookmark() {
 
 		try {
-			if (addrCombo.getSelectedItem() == null)
-				return;
 			final String uri = swoopModel.selectedOWLObject.getURI().toString();
+			if (uri == null) {
+				return;
+			}
 //			if (bookmarks.contains(uri))
 //				return;
 			String name = JOptionPane.showInputDialog(this, "Specify Name:",
@@ -1880,7 +1853,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			bmItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 //					updateAddressBar(uri);
-					loadURIInModel(phyURI, uri);
+					loader.loadURIInModel(phyURI, uri);
 				}
 			});
 		} catch (Exception ex) {
@@ -1888,213 +1861,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		}
 	}
 
-	/***
-	 * Important public method (used by all other components) to load
-	 * a new ontology in SWOOP given its URI.
-	 * @param urlStr - URL of the ontology passed as a String
-	 * @param entityURL - URL of the entity passed as a String
-	 * If no entity is to be selected after loading the ontology,
-	 * pass entityURL = urlStr
-	 * 
-	 * Method:
-	 * 1. Disable all ontology UI listeners in OntDisplay (ontList, ontHideBox)
-	 * 2. Add ontology to swoopModel
-	 * 3. If ontology is loaded properly, select ontList value
-	 * 4. Call swoopModel.setSelectedOntology(ont) -> selectedOntology = ont, selectedEntity = null, calls updateOntologyDisplay
-	 * 5. Finally, also display entityStr if different from urlStr 
-	 */
-	public void loadURIInModel(String urlStr, String entityURL) {
-		try {
-			//System.out.println("Load uri " + urlStr);
-			final URI uri = new URI(urlStr);
-			final String ontURI = urlStr;
-			final String entityURI = entityURL;
-			final SwoopFrame swoopHandler = this;
-			swoopModel.setCurrentlyLoadingURI(uri); // used in View Source when
-			// ontology parsing fails
-
-			//new SwoopProgressFrame(this, "Loading new ontology...", "Loading "
-			//		+ uri, "Cannot load ontology from URI:\n" + uri,
-			final JFrame parent = this;
-			
-			final SwoopProgressDialog progress = new SwoopProgressDialog(parent, "Loading "+uri);
-			
-			progress.show();
-			SwingWorker worker = new SwingWorker() {
-				
-				private OWLOntology ont = null;
-				private Exception error = null;
-				
-				public Object construct() {
-					
-					long startTime = Calendar.getInstance().getTimeInMillis();
-					try {
-						ont = swoopModel.loadOntology(uri);
-					} catch (OWLException e) {
-						error = e;
-					}
-					
-					long endTime = Calendar.getInstance().getTimeInMillis();
-					System.out.println("Ontology loaded in "+
-							(endTime - startTime) + " milliseconds");
-					return ont;
-				}
-				
-				public void finished() {
-
-					progress.dispose();
-					if (error != null) {
-						error.printStackTrace();
-						JDialog dialog = ExceptionDialog.createDialog(SwoopFrame.this, "Cannot load ontology", error);	
-						dialog.show();
-						return;
-					}
-					
-					try {
-						swoopModel.addOntology(ont);
-					} catch (Exception e) {
-						e.printStackTrace();
-						throw new RuntimeException(e.getMessage());
-					} finally {
-
-						if (ont != null) {
-							// BELOW WILL FIRE LISTENER TO UPDATE ONTOLOGY VIEWS
-							ontDisplay.ontList.setSelectedValue(ont, true);
-
-							// DO NOT USE swoopModel.setSelectedOntology(ont) BELOW 
-							// AS IT WOULD INVOKE LISTENERS AGAIN!! 
-							swoopModel.selectedOntology = ont;
-							swoopModel.selectedEntity = null;
-							swoopModel.selectedOWLObject = ont;
-							
-							if (!entityURI.equals(ontURI)) {
-
-								// what happens if ontURI is different
-								// from ont.getURI()
-								// i.e. logical URI is different from
-								// physical URI
-								try {
-									if (!ontURI.equals(ont.getURI().toString())) {
-										
-										// get actual URI of ontology
-										String logOntURI = ont.getURI().toString();
-										if (logOntURI.endsWith("/"))
-											logOntURI = logOntURI.substring(0,
-													logOntURI.length() - 1);
-										
-										// obtain entity name
-										if (!entityURI.equals(logOntURI)) {
-											String entityName = "";
-											if (entityURI.indexOf("#") >= 0)
-												entityName = entityURI.substring(
-														entityURI.indexOf("#"),
-														entityURI.length());
-											else 
-												entityName = entityURI.substring(
-														entityURI.indexOf("/"),
-														entityURI.length());
-											termDisplay.selectEntity(logOntURI
-															+ entityName);
-										}
-									} 
-									else
-										termDisplay.selectEntity(entityURI);
-
-								} 
-								catch (OWLException e) {
-									e.printStackTrace();
-								}
-							}
-							swoopHandler.enableMenuOptions();
-						}
-						ontDisplay.enableUIListeners();
-					}
-				}
-			};
-			worker.start();
-		} 
-		catch (URISyntaxException ex) {
-			JOptionPane.showMessageDialog(null, "This is not a valid URI:\n"
-					+ urlStr, "Error!", JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	public void updateAddressBar(String uri) {
-		System.out.println("updateAddressBar: "+uri);
-		// add uri to address bar
-		// check if it already exists and filter it out
-		Set contents = new HashSet();
-		for (int i = 0; i < addrCombo.getItemCount(); i++) {
-			String addrURI = addrCombo.getItemAt(i).toString();
-			if (!addrURI.toLowerCase().equals(uri.toLowerCase()))
-				contents.add(addrURI);
-		}
-
-		// add (or bump) uri to top
-		addrCombo.removeAllItems();
-		addrCombo.addItem(uri);
-		Iterator iter = contents.iterator();
-		while (iter.hasNext()) {
-			String addrURI = iter.next().toString();
-			addrCombo.addItem(addrURI);
-		}
-	}
-
-	public void addressChanged() {
-
-		try {
-			String uri = (String) addrCombo.getSelectedItem();
-			if ((uri == null) || (uri.equals(addrComboString))) {
-				return;
-			}
-			addrComboString = uri;
-			uri = uri.trim();
-			if (uri.equals(""))
-				return;
-			
-			OWLEntity selectedEntity = swoopModel.getSelectedEntity(); 
-			if(selectedEntity != null) {
-				URI selectedURI = selectedEntity.getURI();			
-				if( selectedURI == null && (selectedEntity instanceof OWLIndividual))
-				    selectedURI = ((OWLIndividual) selectedEntity).getAnonId();
-				if( uri.equals(selectedURI.toString()))
-					return;
-			}
-
-			// check if uri is one of the ontologies
-			boolean isOntology = false;
-			boolean entityInSwoopModel = false;
-			Set ontSet = swoopModel.getOntologyURIs();
-			Iterator ontIter = ontSet.iterator();
-			while (ontIter.hasNext()) {
-				URI ontURI = (URI) ontIter.next();
-				if (ontURI.toString().equals(uri)) {
-					isOntology = true;
-					OWLOntology ont = swoopModel.getOntology(ontURI);
-					ontDisplay.selectOntology(ont);
-					return;
-				} else if (uri.startsWith(ontURI.toString()))
-					entityInSwoopModel = true;
-			}
-
-			// or a class/property/instance
-			if ((!isOntology) && (entityInSwoopModel)) {
-				if (termDisplay != null) {
-					termDisplay.selectEntity(uri);
-				}
-			} else {
-				// new ontology needs to be loaded in swoopModel
-				String ontURI = uri;
-				if (uri.indexOf("#") >= 0)
-					ontURI = uri.substring(0, uri.indexOf("#"));
-				loadURIInModel(ontURI, uri);
-			}
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
+	
 	/**
 	 * Simple method to load a single OWL file written in RDF/XML
 	 * or in Abstract Syntax format
@@ -2102,7 +1869,8 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	private void loadOWLFile() {
 		if (ontFile != null) {
 			String filePath = ontFile.toURI().toString();
-			loadURIInModel(filePath, filePath);
+			
+			loader.loadURIInModel(filePath, filePath);
 			// add ontology to fileOntMap
 			this.fileOntMap.put(ontFile.toURI(), ontFile);
 			
@@ -2681,7 +2449,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 				bmItem.setToolTipText(newBM.getOntology_uri());
 				bmItem.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						loadURIInModel(loadURI, bmURI);
+						loader.loadURIInModel(loadURI, bmURI);
 					}
 				});
 			}
@@ -2766,7 +2534,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			final int ctr = i;
 			bmItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					loadURIInModel(defaultBookmarks[ctr][1],
+					loader.loadURIInModel(defaultBookmarks[ctr][1],
 							defaultBookmarks[ctr][1]);
 				}
 			});
@@ -2924,12 +2692,12 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 
 	public void disableUIListeners() {
 		//		for (int safe=0; safe<5; safe++);
-		addrCombo.removeActionListener(this);
+		//addrCombo.removeActionListener(this);
 	}
 
 	public void enableUIListeners() {
-		this.disableUIListeners();
-		addrCombo.addActionListener(this);
+		//this.disableUIListeners();
+		//addrCombo.addActionListener(this);
 	}
 
 	private JLabel createLabel(String text) {
@@ -2989,6 +2757,11 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 					}
 					else ontSaveMItem.setText("Ontology");
 				}
+			}
+			if (swoopModel.getOntologies().size() == 0) {
+				disableMenuOptions();
+			} else {
+				enableMenuOptions();
 			}
 		}
 		catch (OWLException ex) {

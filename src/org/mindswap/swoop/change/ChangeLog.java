@@ -67,7 +67,6 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableColumn;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.mindswap.swoop.ModelChangeEvent;
@@ -77,14 +76,12 @@ import org.mindswap.swoop.SwoopModelListener;
 import org.mindswap.swoop.renderer.entity.ConciseFormatEntityRenderer;
 import org.mindswap.swoop.renderer.entity.RDFXMLEntityRenderer;
 import org.mindswap.swoop.treetable.JTreeTable;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.change.BooleanElementChange;
 import org.mindswap.swoop.utils.change.EnumElementChange;
 import org.mindswap.swoop.utils.change.RevertCheckpointChange;
 import org.mindswap.swoop.utils.change.SaveCheckpointChange;
 import org.mindswap.swoop.utils.owlapi.CorrectedRDFRenderer;
-import org.mindswap.swoop.utils.rdfapi.EConnTripleVisitor;
-import org.mindswap.swoop.utils.rdfapi.PrettyXMLWriter;
-import org.mindswap.swoop.utils.rdfapi.TripleVisitor;
 import org.mindswap.swoop.utils.ui.ChangeComparator;
 import org.semanticweb.owl.io.RendererException;
 import org.semanticweb.owl.model.OWLAnd;
@@ -458,7 +455,7 @@ public class ChangeLog extends JPanel implements ActionListener, HyperlinkListen
 			int chkPtScope = chkpt.getScope();
 			OWLOntology chkPtOnt = swoopModel.getOntology(chkpt.getOntologyURI());
 			OWLEntity chkPtEntity = swoopModel.getEntity(chkPtOnt, chkpt.getEntityURI(), false);
-			OWLNamedObject currObj = swoopModel.selectedOWLObject;
+			OWLNamedObject currObj = swoopModel.getSelectedObject();
 			if (chkPtOnt==null || currObj==null || (scope == ENTITY_SCOPE && chkPtEntity==null)) return changeDesc;
 			switch (function) {
 				case CHANGE_DESCRIPTION :
@@ -2551,7 +2548,7 @@ public class ChangeLog extends JPanel implements ActionListener, HyperlinkListen
 							swoopHandler.ontDisplay.selectOntology(swoopModel.getOntology(uri));
 						}
 						else {
-							swoopHandler.termDisplay.selectEntity(hLink);
+							new SwoopLoader(swoopHandler, swoopModel).selectEntity(hLink);
 						}
 						
 					} catch (URISyntaxException e1) {						

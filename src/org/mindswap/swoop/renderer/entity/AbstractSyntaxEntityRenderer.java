@@ -1948,7 +1948,7 @@ public class AbstractSyntaxEntityRenderer extends BaseEntityRenderer implements 
 			editorPane.setContentType(contentType);
 			
 			// adding to UI listeners of TermsDisplay
-			editorPane.getDocument().addDocumentListener((TermsDisplay)panel);
+			//editorPane.getDocument().addDocumentListener((TermsDisplay)panel);
 			editorPane.addMouseListener((TermsDisplay)panel);			
 			editorPane.addKeyListener((TermsDisplay)panel);
 			

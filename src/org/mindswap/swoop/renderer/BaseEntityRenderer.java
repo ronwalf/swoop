@@ -155,7 +155,7 @@ public abstract class BaseEntityRenderer implements ShortFormProvider {
 		}
 	}
 	
-	public Set getPropertiesWithDomain(OWLClass c, boolean inherited) throws OWLException {
+	protected Set getPropertiesWithDomain(OWLClass c, boolean inherited) throws OWLException {
 		Set set = new HashSet();
 		Iterator i = reasoner.getProperties().iterator();
 		while(i.hasNext()) {
@@ -251,7 +251,7 @@ public abstract class BaseEntityRenderer implements ShortFormProvider {
 		editorPane.setContentType(contentType);
 		
 		// adding to UI listeners of TermsDisplay
-		editorPane.getDocument().addDocumentListener(TD);
+		//editorPane.getDocument().addDocumentListener(TD);
 		editorPane.addMouseListener(TD);			
 		editorPane.addKeyListener(TD);
 		

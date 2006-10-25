@@ -77,7 +77,7 @@ public class RDFXMLEntityRenderer implements SwoopEntityRenderer, SwoopEditableR
 			// XMLPane construction
 			pane = new XmlEditorPane();
 			pane.addKeyListener((TermsDisplay) panel);
-			pane.getDocument().addDocumentListener((TermsDisplay) panel);
+			//pane.getDocument().addDocumentListener((TermsDisplay) panel);
 		}
 		return pane;
 	}
@@ -101,7 +101,7 @@ public class RDFXMLEntityRenderer implements SwoopEntityRenderer, SwoopEditableR
 	 */
 	public void render(OWLEntity entity, SwoopModel swoopModel, Writer writer) throws RendererException {
 		try {
-			int fontSize = 3+3*Integer.parseInt(swoopModel.getFontSize());
+			int fontSize = swoopModel.getFontPt();
 			
 			//XMLEditorPane does not properly work with setFont...
 			//Font font =  new Font(swoopModel.getFontFace(), Font.PLAIN, fontSize);

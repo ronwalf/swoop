@@ -78,6 +78,7 @@ import org.mindswap.swoop.renderer.ontology.SwoopOntologyInfo;
 import org.mindswap.swoop.renderer.ontology.SwoopSpeciesValidationRenderer;
 import org.mindswap.swoop.utils.DavUtil;
 import org.mindswap.swoop.utils.PluginLoader;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.SwoopStatistics;
 import org.mindswap.swoop.utils.owlapi.CorrectedRDFRenderer;
 import org.mindswap.swoop.utils.ui.ExceptionDialog;
@@ -370,11 +371,6 @@ public class OntologyDisplay extends SwoopDisplayPanel implements
 			refreshOntBox();
 			this.enableUIListeners();
 
-			// add ontology element to history as well
-			if (swoopModel.getSelectedOntology() != null)
-				swoopHandler.termDisplay.addToHistory(swoopModel
-						.getSelectedOntology());
-
 			// finally, revert UI ontology settings (qnames, imports, reasoner)
 			swoopHandler.termDisplay.revertUIOntologySettings();
 		} else if (event.getType() == ModelChangeEvent.ONTOLOGY_REMOVED) {
@@ -476,12 +472,16 @@ public class OntologyDisplay extends SwoopDisplayPanel implements
 			if (result == JOptionPane.YES_OPTION) {
 				// reload ontology ** from its physical location **
 				URI physicalURI = ont.getPhysicalURI();
+				System.out.println("Removing ontology...");
 				swoopModel.removeOntology(ont.getURI());
 				// also remove ontology from cache (tree/list)
 				swoopHandler.termDisplay.removeFromCache(ont);
 				// add new ontology and select it
+
+				System.out.println("Adding ontology...");
 				swoopModel.addOntology(physicalURI);
 				OWLOntology onto = swoopModel.getOntology(ont.getURI());
+				System.out.println("Selecting ontology...");
 				swoopModel.setSelectedOntology(onto);
 				// remove changes associated with old ontology
 				swoopModel.removeChanges(onto);
@@ -658,11 +658,7 @@ public class OntologyDisplay extends SwoopDisplayPanel implements
 				swoopModel.selectedOWLObject = ont;
 				swoopModel.selectedOntology = ont;
 				swoopModel.selectedEntity = null;
-
-				// add ontology element to history as well
-				if (ont != null)
-					swoopHandler.termDisplay.addToHistory(ont);
-
+				
 				// whenever ontology selection changes, need to revert
 				// to user-specific ontology settings
 				// *** below also reclassifies ontology!
@@ -703,15 +699,15 @@ public class OntologyDisplay extends SwoopDisplayPanel implements
 
 		swoopHandler.ontRemoveMItem.setEnabled(true);
 
-		try {
-			// now that ontology is loaded we can update the address bar
-			swoopHandler.disableUIListeners();
-			swoopHandler.updateAddressBar(ont.getURI().toString());
-		} catch (OWLException e) {
-			e.printStackTrace();
-		} finally {
-			swoopHandler.enableUIListeners();
-		}
+//		try {
+//			// now that ontology is loaded we can update the address bar
+//			//swoopHandler.disableUIListeners();
+//			//swoopHandler.updateAddressBar(ont.getURI().toString());
+//		} catch (OWLException e) {
+//			e.printStackTrace();
+//		} finally {
+//			swoopHandler.enableUIListeners();
+//		}
 
 		if ((ontList.getSelectedIndex() != -1)
 				&& (!((OWLOntology) ontList.getSelectedValue()).equals(ont))
@@ -832,7 +828,7 @@ public class OntologyDisplay extends SwoopDisplayPanel implements
 						ontHideBox.setSelectedItem(ont);
 						ontHideBox.addActionListener(this);
 					} else {
-						swoopHandler.termDisplay.selectEntity(hLink);
+						new SwoopLoader(null, swoopModel).selectEntity(hLink);
 					}
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
@@ -1164,22 +1160,6 @@ public class OntologyDisplay extends SwoopDisplayPanel implements
 			// swoopHandler.changeLog.setScope(ChangeLog.ONTOLOGY_SCOPE);
 			swoopHandler.annotRenderer.SwoopSelectionChanged();
 
-			// add ontology element to history as well
-			if (swoopModel.getSelectedOntology() != null) {
-				swoopHandler.termDisplay.addToHistory(swoopModel
-						.getSelectedOntology());
-
-				try {
-					// now that ontology is loaded we can update the address bar
-					swoopHandler.disableUIListeners();
-					swoopHandler.updateAddressBar(swoopModel
-							.getSelectedOntology().getURI().toString());
-				} catch (OWLException e1) {
-					e1.printStackTrace();
-				} finally {
-					swoopHandler.enableUIListeners();
-				}
-			}
 			this.enableUIListeners();
 		}
 	}

@@ -51,6 +51,7 @@ import javax.swing.event.HyperlinkListener;
 import org.mindswap.swoop.SwoopFrame;
 import org.mindswap.swoop.SwoopModel;
 import org.mindswap.swoop.change.ChangeLog;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.change.RevertCheckpointChange;
 import org.mindswap.swoop.utils.change.SaveCheckpointChange;
 import org.semanticweb.owl.model.OWLEntity;
@@ -88,7 +89,7 @@ public class AnnoteaAttachment extends JDialog implements ActionListener, Hyperl
 		if (alreadyAttached == null) alreadyAttached = new ArrayList();
 		this.alreadyAttached = alreadyAttached;
 		setupUI();
-		OWLNamedObject owlObj = changeLog.swoopModel.selectedOWLObject;
+		OWLNamedObject owlObj = changeLog.swoopModel.getSelectedObject();
 		initialize(changeSet, owlObj, attachType);
 		renderChangeSet();
 	}
@@ -361,7 +362,8 @@ public class AnnoteaAttachment extends JDialog implements ActionListener, Hyperl
 							swoopHandler.ontDisplay.selectOntology(swoopModel.getOntology(uri));
 						}
 						else {
-							swoopHandler.termDisplay.selectEntity(hLink);
+							new SwoopLoader(swoopHandler, swoopModel).selectEntity(hLink);
+							
 						}
 						
 					} catch (URISyntaxException e1) {						

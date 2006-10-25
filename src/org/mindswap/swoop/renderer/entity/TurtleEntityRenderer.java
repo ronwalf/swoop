@@ -1538,7 +1538,7 @@ public class TurtleEntityRenderer extends BaseEntityRenderer implements SwoopEdi
 		{
 			editorPane.setEditable(true);			
 			// adding to UI listeners of TermsDisplay
-			editorPane.getDocument().addDocumentListener((TermsDisplay)panel);
+			//editorPane.getDocument().addDocumentListener((TermsDisplay)panel);
 			editorPane.addMouseListener((TermsDisplay)panel);			
 			editorPane.addKeyListener((TermsDisplay)panel);
 		}

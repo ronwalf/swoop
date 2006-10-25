@@ -33,9 +33,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URI;
@@ -48,12 +45,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.TreeSet;
-import java.util.Properties;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -82,18 +79,19 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.mindswap.swoop.ModelChangeEvent;
-import org.mindswap.swoop.Swoop;
 import org.mindswap.swoop.SwoopFrame;
 import org.mindswap.swoop.SwoopModel;
 import org.mindswap.swoop.SwoopModelListener;
 import org.mindswap.swoop.renderer.SwoopCellRenderer;
 import org.mindswap.swoop.treetable.JTreeTable;
+import org.mindswap.swoop.utils.InstanceCreator;
+import org.mindswap.swoop.utils.JavaScriptHandler;
 import org.mindswap.swoop.utils.SwoopCache;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.ui.BrowserControl;
 import org.mindswap.swoop.utils.ui.DescriptionComparator;
 import org.mindswap.swoop.utils.ui.SwoopIcons;
 import org.semanticweb.owl.model.OWLClass;
-import org.semanticweb.owl.model.OWLDataType;
 import org.semanticweb.owl.model.OWLEntity;
 import org.semanticweb.owl.model.OWLException;
 import org.semanticweb.owl.model.OWLNamedObject;
@@ -101,12 +99,7 @@ import org.semanticweb.owl.model.OWLOntology;
 import org.semanticweb.owl.model.helper.OntologyHelper;
 
 import com.hexidec.ekit.EkitCore;
-import org.mindswap.swoop.utils.InstanceCreator;
-// add form processing:use html pane
 import com.holub.ui.HTML.HTMLPane;
-
-// add javascript support
-import org.mindswap.swoop.utils.JavaScriptHandler;
 
 /**
  * @author Aditya Kalyanpur
@@ -590,7 +583,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 			if (fixContextChk.isSelected()) {
 				this.toggleButtonEnable(false);
 				try {
-					statusLbl.setText("Status: "+swoopModel.shortForm(swoopModel.selectedOWLObject.getURI())+" LOCKED");
+					statusLbl.setText("Status: "+swoopModel.shortForm(swoopModel.getSelectedObject().getURI())+" LOCKED");
 				} catch (OWLException e1) {
 					e1.printStackTrace();
 				} 
@@ -721,8 +714,8 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 		
 		String owlObj = "";
 		try {
-			if (swoopModel.selectedOWLObject!=null) {
-				owlObj = swoopModel.shortForm(swoopModel.selectedOWLObject.getURI());
+			if (swoopModel.getSelectedObject()!=null) {
+				owlObj = swoopModel.shortForm(swoopModel.getSelectedObject().getURI());
 			}
 		} catch (OWLException ex) {
 			ex.printStackTrace();
@@ -813,7 +806,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 	public void retrieveAnnotations() {
 		
 		// check if entity is selected first
-		if (swoopModel.selectedOWLObject==null) {
+		if (swoopModel.getSelectedObject()==null) {
 			statusLbl.setText("Status: ERROR retrieving annotations - need to select OWL ontology / entity");
 			return;
 		}
@@ -837,7 +830,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 				
 				// call findAnnotations passing it OWL object URI
 				// and get a set of Description instances
-				URI currentURI = swoopModel.selectedOWLObject.getURI();				
+				URI currentURI = swoopModel.getSelectedObject().getURI();				
 				Set descSet = client.findAnnotations(currentURI);
 				// modify annotates of each description 
 				if (descSet.size()>0) {
@@ -869,7 +862,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 				}
 				else {
 					// for an entity, directly store updated result in cache
-					annotationCache.putAnnotationSet(swoopModel.selectedOWLObject.getURI(), descSet);
+					annotationCache.putAnnotationSet(swoopModel.getSelectedObject().getURI(), descSet);
 				}
 				this.displayAnnotations();
 				
@@ -974,7 +967,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 		URI[] annotates = new URI[2];
 		try {
 			// get selected OWLObject to annotate			  
-			annotates[0] = swoopModel.selectedOWLObject.getURI();			
+			annotates[0] = swoopModel.getSelectedObject().getURI();			
 			annotates[1] = swoopModel.getSelectedOntology().getURI();
 			description.setAnnotates(annotates);
 		} 
@@ -1014,7 +1007,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 		} catch (OWLException e) {			
 			e.printStackTrace();
 		}
-		if (swoopModel.selectedOWLObject instanceof OWLOntology) {
+		if (swoopModel.getSelectedObject() instanceof OWLOntology) {
 			int rendererIndex = swoopHandler.ontDisplay.ontDescTab.getSelectedIndex();
 			JEditorPane renderer = (JEditorPane) swoopHandler.ontDisplay.editors.get(rendererIndex);
 			renderText += renderer.getText();
@@ -1214,9 +1207,9 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 		htmlCore.setText("");
 		annotAttachBtn.setEnabled(false);
 		String status = "Status: Need to Update";
-		if (swoopModel.selectedOWLObject!=null) {
+		if (swoopModel.getSelectedObject()!=null) {
 			try {
-				status += " for " + swoopModel.shortForm(swoopModel.selectedOWLObject.getURI());
+				status += " for " + swoopModel.shortForm(swoopModel.getSelectedObject().getURI());
 			} catch (OWLException e) {
 				e.printStackTrace();
 			}
@@ -1224,7 +1217,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 		statusLbl.setText(status);
 		
 		// check annotation set cache
-		if (swoopModel.selectedOWLObject!=null) {
+		if (swoopModel.getSelectedObject() !=null) {
 			this.displayAnnotations();							
 		}
 		
@@ -1364,7 +1357,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 						
 						try {
 							// if entity already displayed, return
-							if (uri.equals(swoopModel.selectedOWLObject.getURI())) return;
+							if (uri.equals(swoopModel.getSelectedObject().getURI())) return;
 						} catch (OWLException e2) {
 							e2.printStackTrace();
 						}
@@ -1374,7 +1367,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 							swoopHandler.ontDisplay.selectOntology(swoopModel.getOntology(uri));
 						}
 						else {
-							swoopHandler.termDisplay.selectEntity(hLink);
+							new SwoopLoader(swoopHandler, swoopModel).selectEntity(hLink);
 						}
 						
 					} 
@@ -1562,7 +1555,7 @@ public class AnnoteaRenderer extends JPanel implements ActionListener, TreeSelec
 		
 		try {
 			// get main annotations on current selected object in Swoop
-			OWLNamedObject currObj = swoopModel.selectedOWLObject;
+			OWLNamedObject currObj = swoopModel.getSelectedObject();
 			
 			Set mainSet = new HashSet();
 			if (currObj!=null && annotationCache.getAnnotationSet(currObj.getURI())!=null) {

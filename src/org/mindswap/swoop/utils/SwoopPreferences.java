@@ -156,10 +156,9 @@ public class SwoopPreferences extends JDialog {
 		// save UI prefs
 		swoopModel.setShowIcons(iconChk.isSelected(), true);
 		swoopModel.setShowDivisions(divChk.isSelected());
-		String size = String.valueOf(fontSizeBox.getSelectedIndex()+1);
+		int size = fontSizeBox.getSelectedIndex()+1;
 		swoopModel.setFontFace(fontsBox.getSelectedItem().toString(), false);
-		if (size.equals("")) size = "2";
-		if (Integer.parseInt(size)<=0) size = "2";
+		if (size < 0) { size = 2;}
 		swoopModel.setFontSize(size);
 		String count = countFld.getText().trim();
 		if (count.equals("")) count = "200";
