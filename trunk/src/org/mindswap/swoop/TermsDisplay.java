@@ -33,7 +33,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
@@ -55,7 +54,6 @@ import java.util.Vector;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -112,7 +110,7 @@ import org.mindswap.swoop.renderer.entity.TurtleEntityRenderer;
 import org.mindswap.swoop.renderer.entity.graph.GraphPanel;
 import org.mindswap.swoop.utils.PluginLoader;
 import org.mindswap.swoop.utils.SwoopCache;
-import org.mindswap.swoop.utils.XPointers;
+import org.mindswap.swoop.utils.SwoopLoader;
 import org.mindswap.swoop.utils.explain.DatatypeExplanationHTMLSerializer;
 import org.mindswap.swoop.utils.explain.OWLVocabularyExplanationDeposit;
 import org.mindswap.swoop.utils.explain.RDFSVocabularyExplanationDeposit;
@@ -141,13 +139,9 @@ import org.semanticweb.owl.model.OWLObjectProperty;
 import org.semanticweb.owl.model.OWLOntology;
 import org.semanticweb.owl.model.OWLProperty;
 import org.semanticweb.owl.model.OWLSubClassAxiom;
-import org.semanticweb.owl.model.change.ChangeVisitor;
 import org.semanticweb.owl.model.change.OntologyChange;
-import org.semanticweb.owl.model.change.RemoveEntity;
 import org.semanticweb.owl.model.helper.OntologyHelper;
 import org.xngr.browser.editor.XmlEditorPane;
-import org.semanticweb.owl.rules.OWLRuleIVariable;
-import org.semanticweb.owl.rules.OWLRuleObjectPropertyAtom;
 
 
 /**
@@ -155,14 +149,13 @@ import org.semanticweb.owl.rules.OWLRuleObjectPropertyAtom;
  *
  */
 public class TermsDisplay extends SwoopDisplayPanel 
-implements ActionListener, MouseListener, KeyListener, MouseMotionListener, DocumentListener, ChangeListener, ListSelectionListener, HyperlinkListener, TreeSelectionListener, SwoopModelListener {
+implements ActionListener, MouseListener, KeyListener, ChangeListener, ListSelectionListener, TreeSelectionListener, SwoopModelListener, HyperlinkListener {
 	
 	/*
 	 * Global UI objects
 	 */
 	JButton lookupBtn;
 	JButton addClassBtn, addPropBtn, addIndBtn, addGCIBtn, remTermBtn, renameTermBtn;
-	JButton prevBtn, nextBtn;
 	JPanel termEditButtonPane, termListPanel, termDisplayEditPane;
 	JButton applyChangesBtn, undoChangesBtn;
 	JTextField lookupFld;
@@ -212,13 +205,9 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 	SwoopFrame swoopHandler; // handler for SwoopFrame instance
 	TreeRenderer treeRenderer; // renders class and property trees  
 	AnnoteaRenderer annoteaRenderer; // renders entity annotations 
-	OWLNamedObject[][] historyEntity; // history of OWL objects rendered (used by back, next buttons)
-	boolean historyImports[]; // history of show_imports (corresponding to historyEntity) 
 	public ComparatorFrame comparator; // resource holder 
-	int historyCtr; // counter for history array
 	boolean rightClicked = false; // used by popup menu 
 	boolean enableLogging = true; // toggle enable logging of changes
-	boolean historyTraversing = false; // used to disable certain listeners while traversing history
 	String urlClicked = ""; // used by popup menu
 	SwoopCache listCache; // cache for alphabetical term list
 	
@@ -247,9 +236,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		this.treeRenderer = new TreeRenderer(swoopModel, swoopHandler);
 		this.lookupPanel = new SwoopSearch(swoopModel, this, "Lookup Results");
 		this.referencePanel = new SwoopSearch(swoopModel, this, "Reference Results");
-		historyCtr = -1;
-		historyEntity = new OWLNamedObject[9999][2]; // current size limitation of history
-		historyImports = new boolean[9999];
 		comparator = new ComparatorFrame(this);
 		
 		listCache = new SwoopCache();
@@ -262,39 +248,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 	
 	public void setupUI () {
 		
-		//panel for lookup button, field and history buttons
-		JPanel topbtnPanel = new JPanel();
-		topbtnPanel.setLayout(new GridLayout(1,4));
-		
-		try {
-			// load history button images
-			SwoopIcons swoopIcons = new SwoopIcons();
-			ImageIcon prevIcon = (ImageIcon) SwoopIcons.prevIcon;
-			if (SwoopIcons.prevIcon!=null) prevBtn = new JButton(prevIcon);
-			else prevBtn = new JButton("Previous");
-			prevBtn.setFont(tahoma);
-			prevBtn.addActionListener(this);
-			prevBtn.setEnabled(false);
-			prevBtn.addMouseMotionListener(this);
-			ImageIcon nextIcon = (ImageIcon) SwoopIcons.nextIcon;
-			if ( SwoopIcons.nextIcon!=null) nextBtn = new JButton(nextIcon);
-			else nextBtn = new JButton("Next");
-			nextBtn.setFont(tahoma);
-			nextBtn.addActionListener(this);
-			nextBtn.setEnabled(false);
-			nextBtn.addMouseMotionListener(this);
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-		// create history panel
-		JPanel histPanel = new JPanel();
-		histPanel.setLayout(new GridLayout(1,2));
-		histPanel.add(prevBtn);
-		histPanel.add(nextBtn);
-		for (int ctr=0; ctr<3; ctr++) topbtnPanel.add(new JLabel(""));
-		topbtnPanel.add(histPanel, "East");
 		
 		lookupBtn = new JButton("Lookup");
 		lookupBtn.setFont(tahoma);
@@ -322,7 +275,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		// creation of term list
 		termList = new JList();
 		termList.addListSelectionListener(this);
-		termList.addMouseMotionListener(this);
 		termList.addMouseListener(this);
 		termList.addKeyListener(this);
 		termList.setCellRenderer(new SwoopCellRenderer(swoopModel));
@@ -449,7 +401,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		tp.add(topPanel, "North");
 		termListPanel.add(tp, "Center");
 		
-		SwoopIcons swoopIcons = new SwoopIcons();
 		addClassBtn = new JButton("Add", SwoopIcons.smallClassIcon);
 		addClassBtn.setHorizontalTextPosition(AbstractButton.LEFT);
 		addPropBtn = new JButton("Add", SwoopIcons.smallPropIcon);
@@ -620,7 +571,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		
 		// add components to main panel
 		setLayout(new BorderLayout());
-		add(topbtnPanel, "North");
 		add(centerPanel, "Center");
 		
 		// set previously selected term index
@@ -999,141 +949,7 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		termDisplayPane.addChangeListener(this);
 	}
 	
-	protected void traverseHistory(OWLNamedObject namedObj, OWLOntology histOnt, boolean histImports) throws OWLException {
 		
-		// disable ontDisplay listeners
-		this.historyTraversing = true;
-		swoopHandler.disableUIListeners();
-		swoopHandler.ontDisplay.disableUIListeners();
-	
-		if (namedObj instanceof OWLEntity) {
-			
-			// disable termDisplay listeners
-			this.disableUIListeners();
-			OWLEntity entity = (OWLEntity) namedObj;
-			swoopModel.selectedEntity = entity;
-			
-			// check if histOnt is selected or not
-			// also check for toggling of the show_imports setting
-			if (swoopModel.selectedOntology.equals(histOnt)) {
-				if (swoopModel.getShowImports() != (histImports==true)) {
-					// current imports has been toggled from history
-					swoopModel.setShowImports(true);
-					this.showImportChk.setSelected(true);
-				}
-				
-				URI uri = entity.getURI();
-				if ( uri.toString().startsWith( XMLSchemaSimpleDatatypeVocabulary.XS ) 
-				 || (uri.toString().startsWith(OWLVocabularyAdapter.OWL) && !swoopModel.isViewOWLVocabularyAsRDF()
-							&& !uri.toString().equals(OWLVocabularyAdapter.OWL))
-				 || (uri.toString().startsWith(RDFSVocabularyAdapter.RDFS) && !swoopModel.isViewRDFVocabularyAsRDF() 
-							&& !uri.toString().equals(RDFSVocabularyAdapter.RDFS))
-				 || (uri.toString().startsWith(RDFVocabularyAdapter.RDF) && !swoopModel.isViewRDFVocabularyAsRDF()
-							&& !uri.toString().equals(RDFVocabularyAdapter.RDF)
-				|| (uri.toString().indexOf("#ClassExpression") != -1)))
-				{	
-					swoopHandler.updateAddressBar( uri.toString() );					
-				}
-				else {
-					// current selected ontology match
-					selectEntity(entity.getURI().toString());
-				}
-			}
-			else {
-				// different ontology needs to be selected
-				// see if imports setting of that ontology matched history imports setting
-				if (swoopModel.getImportsSetting(histOnt) != (histImports==true)) {
-					List setting = swoopModel.getOntSetting(histOnt);
-					List newSetting = new ArrayList();
-					newSetting.add("true"); // set show_imports true in that setting
-					newSetting.add(setting.get(1));
-					newSetting.add(setting.get(2));
-					swoopModel.setOntSetting(histOnt, newSetting);
-					this.removeFromCache(histOnt);
-				}
-				// different ontology - construct an XPointer
-				String xpointerURI = entity.getURI() + XPointers.asDefinedIn + "(" + histOnt.getURI() + ")";
-				selectEntity(xpointerURI); // select node in class/property tree or individual in termlist
-			}
-			
-			displayTerm(); 
-			swoopHandler.changeLog.refreshChangePane();
-			swoopHandler.displayEntityPane();
-			swoopHandler.annotRenderer.SwoopSelectionChanged();
-			
-			// enable termDisplay listeners
-			this.enableUIListeners();						
-		}
-		else if (namedObj instanceof OWLOntology) {
-			OWLOntology ont = (OWLOntology) namedObj;
-			if (swoopModel.getOntology(ont.getURI())==null) {
-				String ontName = swoopModel.shortForm(ont.getURI());
-				JOptionPane.showMessageDialog(this, "Ontology "+ontName+" not present in SWOOP", "History Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			// disable termDisplay listeners
-			this.disableUIListeners();
-			swoopModel.setSelectedOntology(ont); // this causes rendering of ontology in ontDisplay (see its modelChanged - Ont Selection Changed)
-			swoopHandler.ontDisplay.ontList.setSelectedValue(ont, true);
-			swoopHandler.ontDisplay.ontHideBox.setSelectedItem(ont);
-			// enable termDisplay listeners
-			this.enableUIListeners();
-		}
-		
-		// enable ontDisplay listeners
-		swoopHandler.ontDisplay.enableUIListeners();
-		swoopHandler.enableUIListeners();
-		this.historyTraversing = false;
-	}
-	
-	/**
-	 * Traverse to the previous element in the History
-	 * Calls traverseHistory with the appropriate arguments (entity, ontology, imports)
-	 * as obtained from the historyEntity list.
-	 *
-	 */
-	protected void previousHistory() {
-		try {
-			// get previous term from History Array
-			if (historyCtr<=0) return; else historyCtr--;
-			if (historyCtr==0) prevBtn.setEnabled(false); // if user keeps pressing back and reaches start
-			OWLNamedObject namedObj = historyEntity[historyCtr][0];
-			OWLOntology histOnt = (OWLOntology) historyEntity[historyCtr][1];
-			boolean imports = historyImports[historyCtr];
-			this.traverseHistory(namedObj, histOnt, imports);
-			
-			// if previous was pressed, next button must be enabled
-			nextBtn.setEnabled(true);			
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Traverse to the next element in the History
-	 * Calls traverseHistory with the appropriate arguments (entity, ontology, imports)
-	 * as obtained from the historyEntity list.
-	 *
-	 */
-	protected void nextHistory() {
-		try {
-			// get next term from History Array			
-			historyCtr++;
-			OWLNamedObject namedObj = historyEntity[historyCtr][0];
-			OWLOntology histOnt = (OWLOntology) historyEntity[historyCtr][1];
-			boolean imports = historyImports[historyCtr];
-			if (historyEntity[historyCtr+1][0]==null) nextBtn.setEnabled(false);
-			this.traverseHistory(namedObj, histOnt, imports);
-			
-			// if next was pressed, previous button must be enabled
-			prevBtn.setEnabled(true);
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
 	/**
 	 * Apply changes when user edits text directly (abstract syntax, rdf/xml..)
 	 */ 
@@ -1425,16 +1241,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 			}
 		}
 		
-		// when user presses the Previous Button (History)
-		if (e.getSource()==prevBtn) {
-				previousHistory();
-		}
-		
-		// when user presses the Next Button (History)
-		if (e.getSource()==nextBtn) {					
-			nextHistory();							
-		}
-		
 		// if user checks on search all ontologies
 		if (e.getSource()==searchAllChk) {
 			swoopModel.setLookupAllOnts(searchAllChk.isSelected());
@@ -1664,45 +1470,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		}
 	}
 
-	public void mouseDragged(MouseEvent arg0) {
-	}
-
-	public void mouseMoved(MouseEvent e) {
-		
-		// if mouse is over previous button, set tooltip text to previous history
-		if (e.getSource()==prevBtn) {
-			try {
-				String prevHist = "";
-				for (int i=historyCtr-1; i>=historyCtr-4; i--) {
-					if (i<0) break;
-					OWLNamedObject namedObj = historyEntity[i][0];
-					String owlName = swoopModel.shortForm(namedObj.getURI());					
-					prevHist += owlName + "..";
-				}
-				prevBtn.setToolTipText(prevHist);	
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-		
-		// if mouse is over next button, set tooltip text to next history
-		if (e.getSource()==nextBtn) {
-			try {
-				String nextHist = "";
-				for (int i=historyCtr+1; i<historyCtr+5; i++) {
-					if (historyEntity[i][0]==null) break;
-					OWLNamedObject namedObj = historyEntity[i][0];
-					String owlName = swoopModel.shortForm(namedObj.getURI());
-					nextHist += owlName + "..";
-				}
-				nextBtn.setToolTipText(nextHist);
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
 
 	/**
 	 * Show References (i.e. entity usage) of an OWLEntity in an Ontology
@@ -1854,16 +1621,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		return false;
 	}
 	
-	public void changedUpdate(DocumentEvent arg0) {				
-		// applyChangesBtn.setEnabled(true);
-	}
-
-	public void insertUpdate(DocumentEvent e) {
-	}
-
-	public void removeUpdate(DocumentEvent arg0) {
-	}
-
 	public void keyPressed(KeyEvent e) {
 		
 		if (e.getSource()==termList) {
@@ -2031,10 +1788,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 					if (termList.getSelectedValue() instanceof OWLEntity) {
 						OWLEntity entity = (OWLEntity) termList.getSelectedValue();
 						swoopModel.setSelectedEntity(entity);
-						
-						// update history
-						addToHistory(entity);
-						if (historyCtr>0) prevBtn.setEnabled(true);
 					}
 					// else if GCI, enable remTermBtn
 					else if (termList.getSelectedValue() instanceof OWLSubClassAxiom) {
@@ -2110,7 +1863,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 					if ( uriName.startsWith(XMLSchemaSimpleDatatypeVocabulary.XS ))
 					{ //dealing with xsd datatypes here (handles it differently from normal links)
 						OWLEntity entity = swoopModel.getSelectedOntology().getOWLDataFactory().getOWLClass( uri );
-						this.addToHistory( entity );
 						swoopModel.setSelectedEntity( entity );
 						return;					
 					}
@@ -2118,7 +1870,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 								&& !uriName.equals( OWLVocabularyAdapter.OWL ))
 					{ //dealing with OWL vocabulary (handles it differently from normal links)
 						OWLEntity entity = swoopModel.getSelectedOntology().getOWLDataFactory().getOWLClass( uri );
-						this.addToHistory( entity );
 						swoopModel.setSelectedEntity( entity );
 						return;					
 					}
@@ -2126,7 +1877,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 							 &&	!uriName.equals( RDFSVocabularyAdapter.RDFS) )
 					{ //dealing with OWL vocabulary (handles it differently from normal links)
 						OWLEntity entity = swoopModel.getSelectedOntology().getOWLDataFactory().getOWLClass( uri );
-						this.addToHistory( entity );
 						swoopModel.setSelectedEntity( entity );
 						return;					
 					}
@@ -2134,7 +1884,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 								&& !uriName.equals( RDFVocabularyAdapter.RDF ) )
 					{ //dealing with OWL vocabulary (handles it differently from normal links)
 						OWLEntity entity = swoopModel.getSelectedOntology().getOWLDataFactory().getOWLClass( uri );
-						this.addToHistory( entity );
 						swoopModel.setSelectedEntity( entity );
 						return;					
 					}
@@ -2145,7 +1894,8 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 						swoopHandler.ontDisplay.selectOntology(swoopModel.getOntology(uri));						
 					}
 					else {
-						swoopHandler.termDisplay.selectEntity(hLink);
+						SwoopLoader loader = new SwoopLoader(swoopHandler, swoopModel);
+						loader.selectEntity(hLink);
 					}
 				}
 				catch (Exception e) {
@@ -2190,7 +1940,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 //							change2.accept((ChangeVisitor) ontology);
 //							swoopModel.getReasoner().setOntology(ontology);
 //						}
-						this.addToHistory(newClass);
 						swoopModel.setSelectedEntity(newClass);
 						trees[0].clearSelection();
 					} 
@@ -2331,108 +2080,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		return true;
 	}
 
-	/**
-	 * Important method to select OWL Entity in SWOOP by passing its URI as a string
-	 * This method checks the following: 
-	 * - If URI is not an XPointer, it checks if the entity URI is in the currently selected Swoop ontology and if found, selects it
-	 * -- If URI is an XPointer, it obtains the pointed ontology 
-	 * -- If not Xpointer and not found in current ontology, it checks in remaining ontologies in SwoopModel for a match
-	 * -- If either Xpointer or match in external ontology -> same result - set selected ontology/entity and call updateOntologyViews
-	 * --- As a last step, it attempts to load the external URI reference
-	 * Rendering is handled separately, by listening to
-	 * change in selected entity in SwoopModel
-	 * @param entityURI - URI of the entity to be selected
-	 */
-	public void selectEntity(String entityURI) {
-		
-		try {
-			OWLNamedObject found = null;
-			OWLOntology foundOnt = null;
-			
-			int find = entityURI.indexOf(XPointers.asDefinedIn);
-			if (find==-1) {
-				// uri is NOT an XPointer
-				// so check in selected ontology first
-				OWLOntology selOnt = swoopModel.getSelectedOntology();
-				
-				// if show imports is on for that specific ontology, 
-				// only then search through all entities in imports closure
-				found = swoopModel.getEntity(selOnt, new URI(entityURI), swoopModel.getImportsSetting(selOnt));
-				if (found!=null) {
-					// great! display entity in currently selected ontology and your done
-					this.displayFoundEntity(selOnt, (OWLEntity) found);
-					return;
-				}
-			}
-			else {
-				// URI contains asDefinedIn Xpointer			
-				// get ontology uri
-				String ontURI = entityURI.substring(find + XPointers.asDefinedIn.length()+1, entityURI.length()-1);
-				
-				// if ontology not in Swoop, need to add it to Swoop
-				if (!swoopModel.getOntologyURIs().contains(new URI(ontURI))) {
-					swoopModel.addOntology(new URI(ontURI));	
-				}
-				
-				// now get entityURI and set ontology in which it occurs 'foundOnt'
-				entityURI = entityURI.substring(0, find);
-				foundOnt = swoopModel.getOntology(new URI(ontURI));					
-			}
-		
-			if (found==null) {
-				
-				// if foundOnt!=null, it implies it is an XPointer
-				if (foundOnt==null) {
-					// uri is not in current displayed ontology
-					// and NOT an XPointer
-					// so check to see if its in another ontology in SwoopModel
-					foundOnt = (OWLOntology) checkSwoopModel(new URI(entityURI));
-				}
-				
-				// System.out.println(foundOnt.getURI().toString());
-				if (foundOnt!=null) {
-					// Note:
-					// Since selecting an entity in another ontology
-					// requires creating a tree for that ontology first, 
-					// we just set swoopModel.selectedEntity to this external entity 
-					// Entity is finally selected in updateOntologyViews thread
-					
-					found = swoopModel.getEntity(foundOnt, new URI(entityURI), true); 
-					
-					if (found!=null) {
-						swoopModel.selectedOntology = foundOnt;
-						swoopModel.selectedEntity = (OWLEntity) found;
-						swoopModel.selectedOWLObject = (OWLEntity) found;
-						
-						// whenever ontology selection changes, need to revert
-						// to user-specific ontology settings
-						swoopModel.loadOntSettings(foundOnt);
-//						swoopHandler.updateOntologyViews();
-						return;
-					}
-				}
-			}
-			
-			// if still not found, load external ontology reference into swoopModel?
-			if (found==null) {
-				
-				String ontURI = entityURI;
-                if (entityURI.indexOf("#")>=0) ontURI = entityURI.substring(0, entityURI.indexOf("#"));
-                if (!swoopModel.getOntologyURIs().contains(new URI(ontURI))) {
-					System.out.println("Loading external ontology reference.."+ontURI);					
-					if (entityURI.endsWith("#") || entityURI.endsWith("/")) entityURI = ontURI;
-					swoopHandler.loadURIInModel(ontURI, entityURI);				
-				}
-				else {
-					JOptionPane.showMessageDialog(this, "Entity not found in ontology", "Error", JOptionPane.ERROR_MESSAGE);
-					System.out.println("Not found: "+entityURI);
-				}
-			}
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
 	
 	public void selectExistingClass(URI uri) {
 		
@@ -2452,10 +2099,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 			// eg. Class Expressions (CE)
 			try {
 				OWLClass entity = swoopModel.selectedOntology.getClass(uri);
-				if (!this.historyTraversing) {
-					addToHistory(entity);
-					if (historyCtr>0) prevBtn.setEnabled(true);
-				}
 				swoopModel.setSelectedEntity(entity);
 				trees[0].clearSelection();
 			} 
@@ -2484,10 +2127,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 				entity = swoopModel.selectedOntology.getAnnotationProperty(uri);
 				if (entity==null) entity = swoopModel.selectedOntology.getDataProperty(uri);
 				if (entity==null) entity = swoopModel.selectedOntology.getObjectProperty(uri);
-				if (!this.historyTraversing) {
-					addToHistory(entity);
-					if (historyCtr>0) prevBtn.setEnabled(true);				
-				}
 				swoopModel.setSelectedEntity(entity);
 				trees[1].clearSelection();
 			} 
@@ -2560,7 +2199,7 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 	 * Simply check if URI is present in *any* ontology in SwoopModel
 	 * Currently checks Classes, Data/Object Properties and Individuals
 	 * @param uri - entity URI to be checked
-	 * @return
+	 * @return The ontology it was found in.
 	 */
 	public OWLNamedObject checkSwoopModel(URI uri) {
 		try {
@@ -2670,57 +2309,7 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 		}
 		if (matchTreeEntity==null) matchTreeEntity = (OWLEntity) set.iterator().next();
 		
-		// update history
-		addToHistory(matchTreeEntity);
-		if (historyCtr>0) prevBtn.setEnabled(true);
-		
 		swoopModel.setSelectedEntity(matchTreeEntity);
-	}
-	
-	public void addToHistory(OWLNamedObject namedObj) {
-		// add item to HistoryURI
-		
-		try {
-		    URI uri = namedObj.getURI(); 
-		    // ANON: check for anon id 
-			if( uri == null )
-			    return;
-		    // ======
-			
-			boolean addHistory = false;
-			
-			// check for initial value condition
-			if (historyCtr==-1) addHistory = true;
-			// prevent duplicates
-			else if (historyEntity[historyCtr][0].getURI().equals(uri) && 
-		    	historyEntity[historyCtr][1].getURI().equals(swoopModel.selectedOntology.getURI())) 			
-		    	addHistory = false;
-			else 
-			    addHistory = true;
-			// ======
-			
-			if (addHistory) {
-				
-				//TESTING: System.out.println("addtohistory: "+namedObj.getURI());
-				
-				historyCtr++;
-				historyEntity[historyCtr][0] = namedObj;
-				historyEntity[historyCtr][1] = swoopModel.getSelectedOntology();
-				historyImports[historyCtr] = swoopModel.getShowImports();
-				if (historyCtr>=1) prevBtn.setEnabled(true);
-				else prevBtn.setEnabled(false);
-				nextBtn.setEnabled(false);
-				
-				// also clear all future history entities if any (??)
-				for (int i=historyCtr+1; i<historyEntity.length; i++) {
-					historyEntity[i][0] = null;
-					historyEntity[i][1] = null;
-				}
-			}
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
 	}
 	
 	/**
@@ -2752,7 +2341,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 				panel.setMode( GraphPanel.GRAPH_MODE );
 				SwoopEntityRenderer renderer = (SwoopEntityRenderer) renderers.get(index);
 				renderer.render(entity, swoopModel, null);
-				swoopHandler.updateAddressBar( uri.toString() );
 			}
 			catch (Exception e) 
 			{
@@ -2769,8 +2357,8 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 				if( uri == null && (entity instanceof OWLIndividual))
 				    uri = ((OWLIndividual)entity).getAnonId();
 				// update address bar 
-				if( uri != null)
-				    swoopHandler.updateAddressBar(uri.toString());
+//				if( uri != null)
+//				    swoopHandler.updateAddressBar(uri.toString());
 				// below not needed since current ontology is already selected
 	//			swoopHandler.ontDisplay.simplySelectOntology(selOnto); 
 				
@@ -2842,7 +2430,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 					editorPane.setText( DatatypeExplanationHTMLSerializer.getSerialization(swoopModel, 
 											myXSDDatatypeExplanations.explain(uri)) );
 					// update address bar
-					swoopHandler.updateAddressBar( uri.toString() );
 					return true;
 				} 
 				// OWL vocabulary
@@ -2852,7 +2439,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 					System.out.println( uri );
 					editorPane.setText( VocabularyExplanationHTMLSerializer.getSerialization(swoopModel, 
 							myOWLVocabExplanations.explain(uri), uri ) );
-					swoopHandler.updateAddressBar( uri.toString() );
 					return true;
 				}
 				// RDFS vocabulary
@@ -2861,7 +2447,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 				{
 					editorPane.setText( VocabularyExplanationHTMLSerializer.getSerialization(swoopModel, 
 							myRDFSVocabExplanations.explain(uri), uri ) );
-					swoopHandler.updateAddressBar( uri.toString() );
 					return true;
 				}
 				// RDF vocabulary
@@ -2870,7 +2455,6 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 				{
 					editorPane.setText( VocabularyExplanationHTMLSerializer.getSerialization(swoopModel, 
 							myRDFVocabExplanations.explain(uri), uri ) );
-					swoopHandler.updateAddressBar( uri.toString() );
 					return true;
 				}
 			}
@@ -3015,7 +2599,7 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 			 * 
 			 */
 			termList.setListData(entitySet);
-			termList.setFont(new Font(swoopModel.getFontFace(), Font.PLAIN, 5+2*Integer.parseInt(swoopModel.getFontSize())));
+			termList.setFont(swoopModel.getFont());
 			termList.addListSelectionListener(this);
 			// Evren: it works without updating UI. I suspect updateUI function
 			// causes thos weird exceptions
@@ -3061,7 +2645,7 @@ implements ActionListener, MouseListener, KeyListener, MouseMotionListener, Docu
 			treeRenderer.setShortFormProvider(swoopHandler.swoopModel);
 			trees[selectedTree] = selectedTree == 0 ? treeRenderer.getClassTree(trees[0]) : treeRenderer.getPropertyTree(trees[1]);			
 			//trees[selectedTree].updateUI(); // dont put this on, causes lots of UI issues
-			if (!this.historyTraversing) this.addTreeListeners(trees[selectedTree]);
+			this.addTreeListeners(trees[selectedTree]);
 			
 			// termTabPane refresh error corrected by repainting both tabs			
 			termTabPane.setComponentAt(0, new JScrollPane(trees[0]));

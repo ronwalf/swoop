@@ -24,7 +24,11 @@ package org.mindswap.swoop;
 
 import java.net.URI;
 
+import javax.swing.JFrame;
+
 import org.mindswap.swoop.utils.VersionInfo;
+import org.mindswap.swoop.utils.ui.LocationBar;
+import org.semanticweb.owl.model.OWLOntology;
 
 public class Swoop {
     
@@ -43,15 +47,32 @@ public class Swoop {
 		return false;
 	}
 
-	public static void loadArgs(SwoopModel model, String[] args) {
+	public static void loadArgs(final SwoopModel model, String[] args) {
+		OWLOntology ont = null;
 		for (int i = 0; i < args.length; i++) {
 			try {
-				model.addOntology(new URI(args[i]));
+				URI ontURI = new URI(args[i]);
+				ont = model.loadOntology(ontURI);
+				model.addOntology(ont);
+				
 			} catch (Exception exception) {
 				System.out.println("Could not load ontology " + args[i]);
 			}
 
 		}
+		final OWLOntology lastLoaded = ont;
+		if (lastLoaded != null) {
+			javax.swing.SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	            	try {
+	            		model.setSelectedOntology(lastLoaded);
+	            	} catch (Exception e) {
+	            		e.printStackTrace();
+	            	}
+	            }
+	        });
+		}
+		
 	}
 	
 	public static VersionInfo getVersionInfo() {
@@ -60,19 +81,25 @@ public class Swoop {
 		return vinfo;
 	}
     
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
     	// Create model
-		SwoopModel model = new SwoopModel();
+		final SwoopModel model = new SwoopModel();
 		if (isWebStart()) {
 			System.out.println("In WebStart mode.");
 		}
-		// Create application frame.
-		frame = new SwoopFrame(model);
 		
-		// Show frame
-		frame.setVisible(true);
-		loadArgs(model, args);
-		System.out.println("Loaded ontologies: " + model.getOntologies());
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+            	//Create application frame.
+        		frame = new SwoopFrame(model);
+        		
+        		// Show frame
+        		frame.setVisible(true);
+        		loadArgs(model, args);
+        		System.out.println("Loaded ontologies: " + model.getOntologies());
+            }
+        });
+		
 		
 	}
 }

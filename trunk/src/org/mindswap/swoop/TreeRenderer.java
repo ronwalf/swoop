@@ -210,8 +210,7 @@ public class TreeRenderer {
 		SwoopReasoner reasoner = swoopModel.getReasoner();
 		OWLOntology ontology = reasoner.getOntology();
 
-		Font newFont = new Font(swoopModel.getFontFace(), Font.PLAIN,
-				3 + 3 * Integer.parseInt(swoopModel.getFontSize()));
+		Font newFont = swoopModel.getFont();
 
 		if (ontology == null)
 			return null;
@@ -418,8 +417,7 @@ public class TreeRenderer {
 		OWLOntology ontology = reasoner.getOntology();
 		JTree propTree = null;
 
-		Font newFont = new Font(swoopModel.getFontFace(), Font.PLAIN,
-				3 + 3 * Integer.parseInt(swoopModel.getFontSize()));
+		Font newFont = swoopModel.getFont();
 
 		if (ontology == null)
 			return propTree;

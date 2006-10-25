@@ -354,7 +354,7 @@ public class PopupAddAnnotation extends JFrame implements ActionListener, ListSe
 		
 		// get change parameters
 		OWLOntology dispOnt = swoopModel.getSelectedOntology();
-		OWLNamedObject dispObject = swoopModel.selectedOWLObject;
+		OWLNamedObject dispObject = swoopModel.getSelectedObject();
 		
 		String annotationData = ""; 
 		if (annotContentTabs.getSelectedIndex()==0) {

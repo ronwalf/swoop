@@ -33,35 +33,35 @@ public class ModelChangeEvent {
 	
 	// different constants to represent what kind of change happened 
 	// in the model
-	public static int IMPORTS_VIEW_CHANGED = 1;
-	public static int QNAME_VIEW_CHANGED   = 2;
-	public static int ONTOLOGY_LOADED 	   = 3;
-	public static int ONTOLOGY_REMOVED 	   = 4;
-	public static int ONTOLOGY_CHANGED 	   = 5;
-	public static int ONTOLOGY_SEL_CHANGED = 6;
-	public static int ENTITY_SEL_CHANGED   = 7;
-	public static int REASONER_SEL_CHANGED = 8;
-	public static int ADDED_ENTITY = 9;
-	public static int REMOVED_ENTITY = 10;
-	public static int EDITABLE_CHANGED = 11;
-	public static int DEBUGGING_CHANGED = 12;
-	public static int SHOW_INHERITED = 13;
-	public static int ADDED_CHECKPOINT = 14;
-	public static int REMOVED_CHECKPOINT = 15;
-	public static int ADDED_CHANGE= 16;
-	public static int RESET_CHANGE= 17;
-	public static int ENABLED_CHANGELOG= 18;
-	public static int ENABLED_CHECKPOINT= 19;
-	public static int CLEAR_SELECTIONS = 20;
-	public static int AUTORETRIEVE_CHANGED = 21;
-	public static int FILTER_SEL_CHANGED = 22;
-	public static int ANNOTATION_CACHE_CHANGED = 23;
-	public static int ONTOLOGY_RELOADED = 24;
-	public static int FONT_CHANGED = 25;
-	public static int ONT_STATS_CHANGED = 26;
-	public static int REASONER_FAIL = 27;
-	public static int MOTHERSHIP_DISPLAY = 28;
-	public static int RULES_CHANGED = 29;
+	public final static int IMPORTS_VIEW_CHANGED = 1;
+	public final static int QNAME_VIEW_CHANGED   = 2;
+	public final static int ONTOLOGY_LOADED 	   = 3;
+	public final static int ONTOLOGY_REMOVED 	   = 4;
+	public final static int ONTOLOGY_CHANGED 	   = 5;
+	public final static int ONTOLOGY_SEL_CHANGED = 6;
+	public final static int ENTITY_SEL_CHANGED   = 7;
+	public final static int REASONER_SEL_CHANGED = 8;
+	public final static int ADDED_ENTITY = 9;
+	public final static int REMOVED_ENTITY = 10;
+	public final static int EDITABLE_CHANGED = 11;
+	public final static int DEBUGGING_CHANGED = 12;
+	public final static int SHOW_INHERITED = 13;
+	public final static int ADDED_CHECKPOINT = 14;
+	public final static int REMOVED_CHECKPOINT = 15;
+	public final static int ADDED_CHANGE= 16;
+	public final static int RESET_CHANGE= 17;
+	public final static int ENABLED_CHANGELOG= 18;
+	public final static int ENABLED_CHECKPOINT= 19;
+	public final static int CLEAR_SELECTIONS = 20;
+	public final static int AUTORETRIEVE_CHANGED = 21;
+	public final static int FILTER_SEL_CHANGED = 22;
+	public final static int ANNOTATION_CACHE_CHANGED = 23;
+	public final static int ONTOLOGY_RELOADED = 24;
+	public final static int FONT_CHANGED = 25;
+	public final static int ONT_STATS_CHANGED = 26;
+	public final static int REASONER_FAIL = 27;
+	public final static int MOTHERSHIP_DISPLAY = 28;
+	public final static int RULES_CHANGED = 29;
 
 	/**
 	 * 
