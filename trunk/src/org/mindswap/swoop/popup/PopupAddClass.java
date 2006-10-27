@@ -1216,6 +1216,9 @@ public class PopupAddClass extends JFrame
     			addClassChange();
     			dispose();
     		}
+    		if (e.getActionCommand().equals(AddCloseBar.CLOSE)) {
+    			dispose();
+    		}
     	}
     	else if (e.getSource() == restrictionBar) {
     		if (e.getActionCommand().equals(AddCloseBar.ADD)) {
@@ -1223,6 +1226,9 @@ public class PopupAddClass extends JFrame
     		}
     		if (e.getActionCommand().equals(AddCloseBar.ADDCLOSE)) {
     			addRestrictionChange();
+    			dispose();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.CLOSE)) {
     			dispose();
     		}
     	}
@@ -1234,6 +1240,12 @@ public class PopupAddClass extends JFrame
     			addCEChange();
         		if (currClassExpr!=null) dispose();
     		}
+    		if (e.getActionCommand().equals(AddCloseBar.CLOSE)) {
+    			dispose();
+    		}
+    	}
+    	else if (e.getSource() == cancelBtn3) {
+    		dispose();
     	}
     	else if (e.getSource() == addCEBtn) {
             if (this.typeIntCode == -1) {
