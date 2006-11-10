@@ -12,7 +12,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,6 +43,7 @@ import org.mindswap.swoop.renderer.SwoopCellRenderer;
 import org.mindswap.swoop.renderer.entity.ConciseFormat;
 import org.mindswap.swoop.utils.DataValueChecker;
 import org.mindswap.swoop.utils.change.BooleanElementChange;
+import org.mindswap.swoop.utils.ui.AddCloseBar;
 import org.mindswap.swoop.utils.ui.EntityComparator;
 import org.mindswap.swoop.utils.ui.OntologyComparator;
 import org.semanticweb.owl.io.vocabulary.RDFVocabularyAdapter;
@@ -75,7 +75,6 @@ import org.semanticweb.owl.model.change.AddForeignEntity;
 import org.semanticweb.owl.model.change.AddIndividualClass;
 import org.semanticweb.owl.model.change.AddObjectPropertyRange;
 import org.semanticweb.owl.model.change.AddSuperClass;
-import org.semanticweb.owl.model.change.ChangeVisitor;
 import org.semanticweb.owl.model.change.OntologyChange;
 import org.semanticweb.owl.model.change.RemoveEntity;
 import org.xngr.browser.editor.XmlEditorPane;
@@ -101,8 +100,10 @@ public class PopupAddClass extends JFrame
     Font tahoma = new Font("Tahoma", Font.PLAIN, 11);
     Font tahomaB = new Font("Tahoma", Font.BOLD, 11);
     Font tahomaI = new Font("Tahoma", Font.ITALIC, 11);
-    JButton applyClassBtn, applyResBtn, addClassBtn, addRestrictionBtn, applyCEBtn, addCEBtn, cancelBtn3,
-            cancelBtn, cancelBtn2; // many cancel btns is bad
+    //JButton applyClassBtn, applyResBtn, addClassBtn, addRestrictionBtn, applyCEBtn, addCEBtn, cancelBtn3,
+    //        cancelBtn, cancelBtn2; // many cancel btns is bad
+    JButton addCEBtn, cancelBtn3;
+    AddCloseBar classBar, restrictionBar, ceBar;
     JComboBox simpleClassOntologyCombo, restrPropOntologyCombo,
             restrClassOntologyCombo, classBox, resClassBox, resDTypeBox,
             resPropBox, resNameCombo, propTypeBox;
@@ -289,25 +290,15 @@ public class PopupAddClass extends JFrame
         classList.addKeyListener(this);
         classList.setCellRenderer(new SwoopCellRenderer(swoopModel));
         //classList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        applyClassBtn = new JButton("Add");
-        applyClassBtn.setFont(tahoma);
-        applyClassBtn.addActionListener(this);
-        addClassBtn = new JButton("Add & Close");
-        addClassBtn.setFont(tahoma);
-        addClassBtn.addActionListener(this);
+        
+        classBar = new AddCloseBar();
+        classBar.addActionListener(this);
         tab1.setLayout(new BorderLayout());
         JLabel ontLbl = new JLabel("Select Ontology:");
         ontLbl.setFont(tahoma);
         JLabel classLbl = new JLabel("Select Class:");
         classLbl.setFont(tahoma);
-        JPanel btnPanel = new JPanel();
-        btnPanel.setLayout(new GridLayout(1, 3));
-        btnPanel.add(applyClassBtn);
-//        btnPanel.add(addClassBtn);
-        cancelBtn = new JButton("Cancel");
-        cancelBtn.setFont(tahoma);
-        cancelBtn.addActionListener(this);
-        btnPanel.add(cancelBtn);
+        
         JPanel tab1W = new JPanel();
         tab1W.setLayout(new BorderLayout());
         tab1W.add(ontLbl, "North");
@@ -334,7 +325,7 @@ public class PopupAddClass extends JFrame
         tab1C.add(tab1Split, "Center");
         tab1C.add(newPanel, "South");
         tab1.add(tab1C, "Center");
-        tab1.add(btnPanel, "South");
+        tab1.add(classBar, "South");
         if (this.typeIntCode>=0) mainTab.addTab("Defined", tab1);
         // draw restriction panel
         JPanel restPanel = new JPanel();
@@ -410,12 +401,6 @@ public class PopupAddClass extends JFrame
         resClassPanel.setLayout(new BorderLayout());
         resClassPanel.add(objResLbl, "West");
         resClassPanel.add(resClassBox, "Center");
-        applyResBtn = new JButton("Add");
-        applyResBtn.setFont(tahoma);
-        applyResBtn.addActionListener(this);
-        addRestrictionBtn = new JButton("Add & Close");
-        addRestrictionBtn.setFont(tahoma);
-        addRestrictionBtn.addActionListener(this);
         JPanel restPanelN = new JPanel();
         restPanelN.setLayout(new GridLayout(10, 1));
         JLabel propLbl = new JLabel("Subject of Restriction (Property)");
@@ -431,16 +416,10 @@ public class PopupAddClass extends JFrame
         restPanelN.add(ontPanel3);
         restPanelN.add(resClassPanel);
 
-        JPanel btnPanel2 = new JPanel();
-        btnPanel2.setLayout(new GridLayout(1, 3));
-        btnPanel2.add(applyResBtn);
-//        btnPanel2.add(addRestrictionBtn);
-        cancelBtn2 = new JButton("Cancel");
-        cancelBtn2.setFont(tahoma);
-        cancelBtn2.addActionListener(this);
-        btnPanel2.add(cancelBtn2);
         restPanelN.add(dTypePanel);
-        restPanelN.add(btnPanel2);
+        restrictionBar = new AddCloseBar();
+        restrictionBar.addActionListener(this);
+        restPanelN.add(restrictionBar);
         restPanel.add(restPanelN, "Center");
         simpleClassOntologyCombo.setRenderer(new CellRenderer());
         restrPropOntologyCombo.setRenderer(new CellRenderer());
@@ -554,24 +533,37 @@ public class PopupAddClass extends JFrame
         rightPanel.add(valSplit, "Center");
         ceSplit.add(rightPanel, JSplitPane.RIGHT);
         cePanel.add(ceSplit, "Center");
-        applyCEBtn = new JButton("Add");        
-        applyCEBtn.setFont(tahoma);
-        addCEBtn = new JButton("Add");
-        if (this.typeIntCode==-1) addCEBtn.setText("Specify LHS of GCI and Proceed..");
-        else if (this.typeIntCode==-2) addCEBtn.setText("Specify RHS of GCI & Add GCI");
-        addCEBtn.setFont(tahoma);
-        cancelBtn3 = new JButton("Cancel");
-        cancelBtn3.setFont(tahoma);
+        
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new GridLayout(2,1));
-        JPanel ceBtnPanel = new JPanel();
-        ceBtnPanel.setLayout(new GridLayout(1,3));
-        if (this.typeIntCode>=0) ceBtnPanel.add(applyCEBtn);
-        else ceBtnPanel.add(addCEBtn);
-        ceBtnPanel.add(cancelBtn3);
         ceStatusLbl = new JLabel();
         southPanel.add(this.createRowPanel("Status", ceStatusLbl, "BOLD"));
-        southPanel.add(ceBtnPanel);
+        
+        if (this.typeIntCode >= 0) {
+        	ceBar = new AddCloseBar();
+        	ceBar.addActionListener(this);
+        	southPanel.add(ceBar);
+        } else {
+			addCEBtn = new JButton("Add");
+			if (this.typeIntCode == -1)
+				addCEBtn.setText("Specify LHS of GCI and Proceed..");
+			else if (this.typeIntCode == -2)
+				addCEBtn.setText("Specify RHS of GCI & Add GCI");
+			addCEBtn.setFont(tahoma);
+			cancelBtn3 = new JButton("Cancel");
+			cancelBtn3.setFont(tahoma);
+			JPanel ceBtnPanel = new JPanel();
+			ceBtnPanel.setLayout(new GridLayout(1, 3));
+			ceBtnPanel.add(addCEBtn);
+			ceBtnPanel.add(cancelBtn3);
+			southPanel.add(ceBtnPanel);
+			
+			addCEBtn.addActionListener(this);
+	        cancelBtn3.addActionListener(this);
+		}
+        
+        
+        
         cePanel.add(southPanel, "South");
         mainTab.addTab("Class Expression", cePanel);
         
@@ -585,9 +577,6 @@ public class PopupAddClass extends JFrame
         intBtn.addActionListener(this);
 		uniBtn.addActionListener(this);
 		negBtn.addActionListener(this);
-		applyCEBtn.addActionListener(this);
-        addCEBtn.addActionListener(this);
-        cancelBtn3.addActionListener(this);
         clearSelBtn1.addActionListener(this);
         clearSelBtn2.addActionListener(this);
         clearSelBtn3.addActionListener(this);
@@ -623,7 +612,7 @@ public class PopupAddClass extends JFrame
                 }
             });
             dtypePanel.add(new JScrollPane(dtypeList), "Center");
-            dtypePanel.add(btnPanel, "South");
+            dtypePanel.add(classBar, "South");
             content.add(dtypePanel);
         } 
         else {
@@ -1219,24 +1208,46 @@ public class PopupAddClass extends JFrame
     }
     
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == applyClassBtn) {
-            addClassChange();
-        }
-        else if (e.getSource() == addClassBtn) {
-            addClassChange();
-            dispose();
-        }
-        else if (e.getSource() == applyResBtn) {
-            addRestrictionChange();
-        }
-        else if (e.getSource() == addRestrictionBtn) {
-            addRestrictionChange();
-            dispose();
-        }
-        else if (e.getSource() == applyCEBtn) {
-            addCEChange();
-        }
-        else if (e.getSource() == addCEBtn) {
+    	if (e.getSource() == classBar) {
+    		if (e.getActionCommand().equals(AddCloseBar.ADD)) {
+    			addClassChange();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.ADDCLOSE)) {
+    			addClassChange();
+    			dispose();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.CLOSE)) {
+    			dispose();
+    		}
+    	}
+    	else if (e.getSource() == restrictionBar) {
+    		if (e.getActionCommand().equals(AddCloseBar.ADD)) {
+    			addRestrictionChange();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.ADDCLOSE)) {
+    			addRestrictionChange();
+    			dispose();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.CLOSE)) {
+    			dispose();
+    		}
+    	}
+    	else if (e.getSource() == ceBar) {
+    		if (e.getActionCommand().equals(AddCloseBar.ADD)) {
+    			addCEChange();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.ADDCLOSE)) {
+    			addCEChange();
+        		if (currClassExpr!=null) dispose();
+    		}
+    		if (e.getActionCommand().equals(AddCloseBar.CLOSE)) {
+    			dispose();
+    		}
+    	}
+    	else if (e.getSource() == cancelBtn3) {
+    		dispose();
+    	}
+    	else if (e.getSource() == addCEBtn) {
             if (this.typeIntCode == -1) {
             	// just added LHS of GCI
             	this.addLHSGCI();            	
@@ -1251,9 +1262,10 @@ public class PopupAddClass extends JFrame
         		if (currClassExpr!=null) dispose();
         	}            
         }
-        else if ((e.getSource() == cancelBtn) || (e.getSource() == cancelBtn2) || (e.getSource() == cancelBtn3)) {
-            dispose();
-        }
+    	else if ((e.getSource() instanceof AddCloseBar) 
+    			&& e.getActionCommand().equals(AddCloseBar.CLOSE)) {
+    		dispose();
+    	}
         else if (e.getSource() == someBtn) {
         	this.createCE(SOME);
         }
@@ -1952,9 +1964,9 @@ public class PopupAddClass extends JFrame
         else if (e.getSource() == newClassFld) {
             if (e.getKeyCode() == 10) {
                 if (mainTab.getSelectedIndex() == 0)
-                    applyClassBtn.doClick();
+                    addClassChange();
                 else if (mainTab.getSelectedIndex() == 1)
-                    applyResBtn.doClick();
+                    addRestrictionChange();
             }
         }
         else if (e.getSource() == ceList) {
