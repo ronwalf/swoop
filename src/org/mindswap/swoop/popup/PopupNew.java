@@ -355,7 +355,6 @@ public class PopupNew extends JFrame implements ActionListener, DocumentListener
 					ae.accept((ChangeVisitor) ontology);
 					
 					swoopModel.addOntology(ontology);
-					((OntologyDisplay) SwoopHandler).swoopHandler.enableMenuOptions();
 					swoopModel.setSelectedOntology(ontology);					
 				}					
 				else {

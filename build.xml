@@ -21,7 +21,7 @@
     <property name="test.dir" location="${base.dir}/test" />
 
     <property name="project.name" value="swoop" />
-    <property name="project.version.number" value="2.3-beta3" />
+    <property name="project.version.number" value="2.3" />
     <property name="mainclass" value="org.mindswap.swoop.Swoop"/>
     <property name="test.class.name" value="org.mindswap.swoop.AllTests"/>
     <property name="catalina.home" value="${env.CATALINA_HOME}" />
@@ -55,7 +55,9 @@
             <classpath refid="project.class.path"/>
             <exclude name="org/mindswap/swoop/rules/**/*.java"/>
             <exclude name="org/mindswap/swoop/reasoner/SwoopDIGReasoner.java"/>
+            <exclude name="org/mindswap/swoop/renderer/entity/NLVisitor.java"/>
             <exclude name="org/mindswap/swoop/refactoring/Test*.java"/>
+            <exclude name="org/mindswap/swoop/renderer/entity/SwoopURLListener.java"/>
             <!--
             <exclude name="org/mindswap/swoop/renderer/entity/NLEntityRenderer.java"/>
             <exclude name="org/mindswap/swoop/renderer/entity/NLVisitor.java"/>
