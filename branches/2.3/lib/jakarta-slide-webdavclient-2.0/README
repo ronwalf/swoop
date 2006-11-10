@@ -1,0 +1,27 @@
+Slide 2.0 WebDAV client
+==========================
+
+This module of Slide contains a WebDAV client implementation and a
+command line client that can be used to access a WebDAV server.
+The command line client is also a example for the usage of the
+client library.
+
+Building client library
+---------------------------
+
+This module is distributed with a Ant build script. Following
+targets can be used:
+
+- build-clientlib: Compile
+- dist-clientlib: Build jar lib with WebDav client and copy required jars to build/lib
+- javadoc-clientlib: Create API documentation
+- build-cmd: Build commandline client
+- dist-cmd: Distribute commandline client with required jars
+- all: dist and javadoc are executed
+
+Using client library
+------------------------
+
+The class org.apache.webdav.lib.WebdavResource is the main interface
+to the client. Usage examples can be found in the implementation of 
+the command line client.
