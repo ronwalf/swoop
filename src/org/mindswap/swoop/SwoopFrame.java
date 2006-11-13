@@ -63,8 +63,6 @@ import java.util.Vector;
 import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -115,7 +113,6 @@ import org.mindswap.swoop.utils.treeexport.TM3FileFilter;
 import org.mindswap.swoop.utils.treeexport.VisualizationFileFilter;
 import org.mindswap.swoop.utils.ui.BookmarkComparator;
 import org.mindswap.swoop.utils.ui.BrowserControl;
-import org.mindswap.swoop.utils.ui.ExceptionDialog;
 import org.mindswap.swoop.utils.ui.LaunchBar;
 import org.mindswap.swoop.utils.ui.LocationBar;
 import org.mindswap.swoop.utils.ui.SwingWorker;
@@ -128,6 +125,7 @@ import org.semanticweb.owl.model.OWLDataProperty;
 import org.semanticweb.owl.model.OWLEntity;
 import org.semanticweb.owl.model.OWLException;
 import org.semanticweb.owl.model.OWLIndividual;
+import org.semanticweb.owl.model.OWLNamedObject;
 import org.semanticweb.owl.model.OWLObject;
 import org.semanticweb.owl.model.OWLObjectProperty;
 import org.semanticweb.owl.model.OWLOntology;
@@ -144,8 +142,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			ontCodeASMenu, exportStatsMItem, exportTreeMItem, exportHTMLMItem;
 	private JMenuItem clearMItem, exportMItem, prefMItem, addResHoldMItem, 
 			viewResHoldMItem, queryMItem, repairMItem, versionMItem, sudokuMItem;
-	private JMenuItem addBookmarkMenu, remBookmarkMenu, sortBookmarkMenu, sampleOnt0Menu, sampleOnt1Menu, sampleOnt2Menu,
-			sampleOnt3Menu, sampleOnt4Menu, sampleOnt5Menu;
+	private JMenuItem addBookmarkMenu, remBookmarkMenu, sortBookmarkMenu;
 	private JMenuItem JMenuAutomatic, browserMenu, reloadOntMenu, refreshOntMenu, extractModMenu, extractModDualMenu;
 //	public  JMenu sosMenu;
 	private JMenuItem tableauSOSMenu, findAllMUPSMenu, splitOntMItem;	
@@ -153,7 +150,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 
 	//*****************************************************
 	private JCheckBoxMenuItem viewSideBarMenu, viewChangeBarMenu, viewOptionBarMenu, showEnableRules;
-	private JCheckBox showChangeBarChk, showDivisionsChk;
+	private JCheckBox showChangeBarChk;
 
 	private JSplitPane rendererPanel, sidePanel, centerPanel, rendererAdvancedPane;
 	private JPanel optionPanel, ontPanel;
@@ -222,7 +219,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		} 
 	}
 
-	public void setupUI() {
+	private void setupUI() {
 
 		// setup look & feel of UI
 		setupLookFeel();
@@ -310,7 +307,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 
 		// add advanced menu option: version control
 		versionControl = new VersionControl(swoopModel, this);
-		versionControl.hide();
+		versionControl.setVisible(false);
 
 		// initialize JFrame
 		//setTitle("SWOOP v2.3 beta 3.1 (Jan 2006)"); // + Swoop.getVersionInfo().getVersionString());
@@ -346,7 +343,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		this.viewSideBarMenu.setSelected(true);
 		this.viewOptionBarMenu.setSelected(true);
 		this.changeLog.getOntRadio().setSelected(true);
-		this.changeLog.scope = changeLog.ONTOLOGY_SCOPE;
+		this.changeLog.scope = ChangeLog.ONTOLOGY_SCOPE;
 	}
 
 	/*
@@ -665,7 +662,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 					JFrame frame = new JFrame("Class Hierarchy");
 					frame.getContentPane().add(msgPanel);
 					frame.setSize(600, 500);
-					frame.show();
+					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -1371,7 +1368,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			SwoopPreferences preferences = new SwoopPreferences(this,
 					swoopModel);
 			preferences.loadPreferences();
-			preferences.show();
+			preferences.setVisible(true);
 		}
 		else
 		if (e.getSource() == ontSaveMItem) {
@@ -1471,7 +1468,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		}
 		else
 		if (e.getSource() == viewResHoldMItem) {
-			termDisplay.comparator.show();
+			termDisplay.comparator.setVisible(true);
 		}
 		else
 		if (e.getSource() == viewSideBarMenu) {
@@ -1596,7 +1593,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		else
 		if (e.getSource() == sudokuMItem) {
 			// launch Sudoku UI
-			Sudoku sud = new Sudoku(swoopModel, this, 4);				
+			new Sudoku(swoopModel, this, 4);				
 		}
 //		 ***************************************************
 		// Added for enabling rules
@@ -1739,8 +1736,6 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			if (srcWindow != null)
 				srcWindow.dispose();
 
-			int result = -1;
-
 			// get current preferences object from swoopModel
 			// and check setting for code_highlighting
 			srcWindow = new PopupOntologySource(this, swoopModel, format);
@@ -1753,9 +1748,16 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 					// *** HACKY STUFF TO SELECT CODE FRAGMENT ***
 					// depends on how the RDF/XML code is generated by the OWL API
 					// jump to currently selected entity source code
-					if (swoopModel.getSelectedEntity() != null) {
-
-						String entityURI = swoopModel.getSelectedEntity().toString();
+					String entityURI = null;
+					try {
+						OWLNamedObject selected = swoopModel.getSelectedEntity();
+						if (selected != null && selected.getURI() != null) {
+							entityURI = selected.getURI().toString();
+						}
+					} catch (OWLException e) {
+						e.printStackTrace();
+					}
+					if (entityURI != null) {
 
 						// select entity defn.
 						// determine type of entity
@@ -1809,7 +1811,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 					}
 				}
 			}
-			srcWindow.show();
+			srcWindow.setVisible(true);
 		}
 	}
 
@@ -2641,7 +2643,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	 * saves the current workspace OR "default.swp"
 	 *
 	 */
-	public void SwoopClose() {
+	private void SwoopClose() {
 
 		if (!Swoop.isWebStart()) {
 			

@@ -55,6 +55,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
+import java.util.WeakHashMap;
 import java.util.prefs.Preferences;
 
 import javax.swing.ButtonGroup;
@@ -222,7 +223,7 @@ public class SwoopModel implements ShortFormProvider {
     private SwoopCache reasonerCache; // cache for reasoners
     private HashMap reasonerMap; // key - reasoner name, value - SwoopReasoner instance
     private File wkspcFile; // last workspace file used
-    private HashMap classExprHash; // hash for class expressions
+    private Map classExprHash; // hash for class expressions
     private String userName = ""; // used for version control, general provenance info etc
     public HashMap changeMap; // map for ontology changes (used in changelog)
     public HashMap versionRepository; // map with key: repositoryURI, value: array of Description objects, each corresponding to version commit (first being header)
@@ -267,7 +268,7 @@ public class SwoopModel implements ShortFormProvider {
     	changesCache = new SwoopCache();
     	reasonerCache = new SwoopCache();
     	reasonerMap = new HashMap();
-    	classExprHash = new HashMap();
+    	classExprHash = new WeakHashMap();
     	changeMap = new HashMap();
     	changedOntologies = new HashSet();
     	versionRepository = new HashMap();
