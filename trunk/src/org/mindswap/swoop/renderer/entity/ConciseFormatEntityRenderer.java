@@ -167,7 +167,7 @@ import org.semanticweb.owl.rules.OWLRuleObjectPropertyAtom;
 public class ConciseFormatEntityRenderer extends BaseEntityRenderer implements SwoopEditableRenderer, SwoopEntityRenderer {
 	
 	List changes = null;
-	public Map OWLDescHash;
+	public Map OWLDescHash = new HashMap();
 	OWLEntity displayedEntity;
 	String[] depictions = {"http://www.mindswap.org/~glapizco/technical.owl#depiction", "http://xmlns.com/foaf/0.1/depiction"}; 
 	String HR = "</tr><tr></tr><tr bgcolor=\"#FFF68F\">";
@@ -3161,7 +3161,7 @@ public class ConciseFormatEntityRenderer extends BaseEntityRenderer implements S
 	}
 	
 	private void reset() {
-		OWLDescHash = new Hashtable();				
+		OWLDescHash.clear();
 	}
 	
 	public void render(OWLEntity entity, SwoopModel swoopModel, Writer writer) throws RendererException {

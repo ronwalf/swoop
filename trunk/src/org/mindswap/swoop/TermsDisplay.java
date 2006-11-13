@@ -172,7 +172,7 @@ implements ActionListener, MouseListener, KeyListener, ChangeListener, ListSelec
 	OWLOntology classTreeOfOntology, propTreeOfOntology;
 	JComboBox filterCombo;
 	JTabbedPane advancedPane;
-	SwoopSearch lookupPanel, referencePanel;
+	public SwoopSearch lookupPanel, referencePanel;
 	URI treeEntityURI;
 	JLabel warningEditLbl;
 	
@@ -2511,7 +2511,7 @@ implements ActionListener, MouseListener, KeyListener, ChangeListener, ListSelec
 				//***************************************************************
 				
 				entitySet = new Vector();
-				if (showImportChk.isSelected()){
+				if (swoopModel.getImportsSetting(swoopModel.getSelectedOntology())){
 					entitySet.addAll(swoopModel.getEntitySet(currOnt, SwoopModel.TRANSCLOSE_ONT, ENTITY_TYPE));					
 				}
 				else{ 
@@ -2652,8 +2652,8 @@ implements ActionListener, MouseListener, KeyListener, ChangeListener, ListSelec
 			termTabPane.setComponentAt(1, new JScrollPane(trees[1]));
 			
 			// set current class/prop ontology (useful for stats)
-			if (selectedTree==0) this.classTreeOfOntology = swoopModel.selectedOntology;
-			else this.propTreeOfOntology = swoopModel.selectedOntology;
+			if (selectedTree==0) this.classTreeOfOntology = swoopModel.getSelectedOntology();
+			else this.propTreeOfOntology = swoopModel.getSelectedOntology();
 			swoopModel.removeOntStats(swoopModel.selectedOntology);
 		}
 		catch (Exception e) {
