@@ -15,6 +15,8 @@ import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.StringWriter;
@@ -30,9 +32,12 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -47,6 +52,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 import org.mindswap.swoop.ModelChangeEvent;
 import org.mindswap.swoop.SwoopModel;
@@ -67,6 +73,7 @@ import org.mindswap.swoop.utils.graph.hierarchy.colors.PartitionFocusColorScheme
 import org.mindswap.swoop.utils.graph.hierarchy.layout.SizeAwareCircleLayout;
 import org.mindswap.swoop.utils.graph.hierarchy.popup.ListSelectionPopup;
 import org.mindswap.swoop.utils.graph.hierarchy.popup.OntologyGraphAxiomWalker;
+import org.mindswap.swoop.utils.graph.hierarchy.ui.CCGraphPanel;
 import org.mindswap.swoop.utils.ui.EntityComparator;
 import org.mindswap.swoop.utils.ui.SwoopIcons;
 import org.semanticweb.owl.model.OWLClass;
@@ -110,8 +117,9 @@ import edu.uci.ics.jung.visualization.contrib.KKLayout;
  * TODO To change the template for this generated type comment go to Window -
  * Preferences - Java - Code Style - Code Templates
  */
-public class OntologyWithClassHierarchyGraph extends JPanel implements
-		ActionListener, SwoopModelListener {
+public class OntologyWithClassHierarchyGraph extends JPanel 
+	implements ActionListener, SwoopModelListener, KeyListener 
+{
 
 	class SwoopOntologyVertexComparator implements Comparator {
 
@@ -163,7 +171,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 			myVV.repaint();
 		}
 	}
-
+	
 	// just an index variable used a key for OntologyGraphNode for a Vertex
 	public static final String DATA = "DATA";
 
@@ -366,6 +374,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 		this.setupUI();
 		this.getParent().validate();
 		vv.autoPanZoom();
+		
 		//myOverlayGraph.precomputeAllRelations(); // precompute for the relations
 												 // in the class trees
 	}
@@ -568,7 +577,8 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 
 		//vSize.setGraph( graph );
 
-		GraphZoomScrollPane scrollPane = new GraphZoomScrollPane(vv);
+		CCGraphPanel gPanel = new CCGraphPanel(vv);
+		
 		ZoomPanGraphMouse gm = new ZoomPanGraphMouse(vv);
 		vv.setGraphMouse(gm);
 		vv.setToolTipListener(new VertexTips());
@@ -603,7 +613,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 		myLeftSplitPane.setOneTouchExpandable(true);
 
 		mySplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false,
-				myLeftSplitPane, scrollPane);
+				myLeftSplitPane, gPanel);
 		mySplitPane.setOneTouchExpandable(true);
 		setLayout(new BorderLayout());
 		add(mySplitPane);
@@ -612,6 +622,8 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 		// set up popup menus
 		myVertexPopupMenu = getVertexPopupMenu();
 		myClassPopupMenu = getClassPopupMenu();
+		
+		this.addKeyListener( this );
 	}
 
 	protected JPanel getButtonPanel() {
@@ -975,7 +987,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 		} else {
 			myColorScheme = new DefaultColorScheme();
 			currentView = NORMAL_VIEW;
-			this.myOverlayGraph.clear(); // reset edges/graphs
+			//this.myOverlayGraph.clear(); // reset edges/graphs
 			//pr.setVertexPaintFunction( myBasicColor );
 		}
 		vv.repaint();
@@ -1250,4 +1262,20 @@ public class OntologyWithClassHierarchyGraph extends JPanel implements
 		}
 	}
 
+	public void keyTyped(KeyEvent e) 
+	{
+		if (e.getKeyCode() == KeyEvent.VK_A )
+			System.out.println("a");
+	}
+
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

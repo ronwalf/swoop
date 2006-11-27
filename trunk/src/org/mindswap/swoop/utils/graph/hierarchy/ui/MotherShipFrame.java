@@ -12,15 +12,21 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.net.URI;
 import java.util.Vector;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
 import javax.swing.ImageIcon;
+import javax.swing.InputMap;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import org.mindswap.swoop.Swoop;
 import org.mindswap.swoop.SwoopModel;
@@ -93,7 +99,6 @@ public class MotherShipFrame extends JFrame implements LaunchListener, WindowLis
 	        }
 		}
 	}
-
 	
 	private OntologyWithClassHierarchyGraph myGraph = null;
 	private ImagePanel myPanel;
@@ -111,7 +116,7 @@ public class MotherShipFrame extends JFrame implements LaunchListener, WindowLis
 		this.validate();
 		this.repaint();
 		this.addWindowListener( this );
-		this.setVisible( true );		
+		this.setVisible( true );
 	}
 	
 	public void launchStateChanged(LaunchEvent e) 
@@ -154,6 +159,5 @@ public class MotherShipFrame extends JFrame implements LaunchListener, WindowLis
 	
 	public void windowDeactivated(WindowEvent arg0) 
 	{}
-	
-	
+		
 }
