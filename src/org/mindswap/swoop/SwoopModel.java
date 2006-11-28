@@ -1376,6 +1376,8 @@ public class SwoopModel implements ShortFormProvider {
 						else {
 							// set new reasoner
 							model.reasoner = reas;
+							// add reasoner to cache
+				   	        reasonerCache.putReasoner(selectedOntology, reas.getName(), reas);
 							notifyListeners(new ModelChangeEvent(model, ModelChangeEvent.REASONER_SEL_CHANGED));
 						}																   	
 					}
@@ -1658,7 +1660,7 @@ public class SwoopModel implements ShortFormProvider {
 		try {
 			CorrectedRDFRenderer rdfRend = new CorrectedRDFRenderer();
 			StringWriter st = new StringWriter();
-			rdfRend.renderOntology(source, st);			
+			rdfRend.renderOntology(source, st);
 			copy = this.loadOntologyInRDF(new StringReader(st.toString()), source.getURI(), true);			
 		}
 		catch (Exception ex) {
@@ -3119,13 +3121,13 @@ public class SwoopModel implements ShortFormProvider {
 					}
 	        	}
 	        	else reas = this.getDefaultReasoner();
-	        	System.out.println("Reasoner type: " + reas.getClass().getName() );
+	        	// System.out.println("Reasoner type: " + reas.getClass().getName() );
 	        	// and add it to vector
 	        	reasMap.put(ont.getURI(), reas);
 	        }
 			
 			// now use SwingWorker to process all ontologies inside thread
-			final HashMap rm = reasMap;    	
+			final HashMap rm = reasMap;
 			final List ol = ontList;
 			SwingWorker worker = new SwingWorker() {
     			public Object construct() {
@@ -3151,7 +3153,7 @@ public class SwoopModel implements ShortFormProvider {
     				notifyListeners(new ModelChangeEvent(null, ModelChangeEvent.MOTHERSHIP_DISPLAY));
     			}
 			};
-			worker.start();	        
+			worker.start();
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
@@ -3272,7 +3274,7 @@ public class SwoopModel implements ShortFormProvider {
 					if ( reas instanceof PelletReasoner )
 						((PelletReasoner)reas).setOntology( selectedOntology, true, false );
 					else
-						reas.setOntology(selectedOntology);							
+						reas.setOntology(selectedOntology);
 				} 
 				catch (Exception ex) {
 					fail = true;
@@ -3292,6 +3294,8 @@ public class SwoopModel implements ShortFormProvider {
 				else {
 					// set new reasoner
 					model.reasoner = reas;
+					// add reasoner to cache
+		   	        reasonerCache.putReasoner(selectedOntology, reas.getName(), reas);
 					notifyListeners(new ModelChangeEvent(model, ModelChangeEvent.REASONER_SEL_CHANGED));
 				}																   	
 			}

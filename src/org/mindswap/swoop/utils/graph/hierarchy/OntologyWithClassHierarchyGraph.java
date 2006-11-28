@@ -314,7 +314,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel
 
 	private Vector partitions = null;
 
-	private HashMap reasonerMap = null;
+	private HashMap myReasonerMap = null;
 
 	// partitions is a vector of OWLOntologies
 	public OntologyWithClassHierarchyGraph(SwoopModel model, Vector partitions) {
@@ -325,7 +325,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel
 		this.graph = new DirectedSparseGraph();
 		this.myColorScheme = new DefaultColorScheme();
 		//this.myOverlayGraph = new OverlayGraph(this.graph, this.myModel, this);
-		this.reasonerMap = new HashMap();
+		this.myReasonerMap = new HashMap();
 		this.partitions = partitions;
 
 		Set allOnts = new HashSet();
@@ -353,7 +353,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel
 		// process ontology and put it back in the vector: reasoners
 		// finally, swoopModel directly notifies this class instance
 		// see modelChanged(..) in this class
-		myModel.callFromMotherShip(allOnts, reasonerMap);
+		myModel.callFromMotherShip(allOnts, myReasonerMap);
 	}
 
 	/*
@@ -401,7 +401,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel
 
 	public ClassTreeNode buildRootTreeNode(OWLOntology ontology)
 			throws OWLException {
-		SwoopReasoner reasoner = (SwoopReasoner) reasonerMap.get(ontology
+		SwoopReasoner reasoner = (SwoopReasoner) myReasonerMap.get(ontology
 				.getURI());
 		Set set = reasoner.equivalentClassesOf(owlThing);
 		set.add(owlThing);
@@ -430,7 +430,7 @@ public class OntologyWithClassHierarchyGraph extends JPanel
 
 		ClassTreeNode root = createNode( clss, depth );
 
-		SwoopReasoner reasoner = (SwoopReasoner) this.reasonerMap.get(ontology
+		SwoopReasoner reasoner = (SwoopReasoner) this.myReasonerMap.get(ontology
 				.getURI());
 		Object obj = concepts.iterator().next();
 
@@ -1092,6 +1092,9 @@ public class OntologyWithClassHierarchyGraph extends JPanel
 		return myOverlayGraph;
 	}
 
+	public HashMap getMyReasonerMap()
+	{ return myReasonerMap; }
+	
 	private final class VertexSize implements VertexSizeFunction {
 		boolean scale = true;
 

@@ -14,7 +14,7 @@ import java.util.Comparator;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-class SubclassAxiomContainerComparator implements Comparator
+public class SubclassAxiomContainerComparator implements Comparator
 {
 	private static SubclassAxiomContainerComparator myInstance = null;
 	
