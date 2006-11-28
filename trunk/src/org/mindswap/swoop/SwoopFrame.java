@@ -90,6 +90,8 @@ import org.mindswap.swoop.change.OntologyChangeRenderer;
 import org.mindswap.swoop.change.SwoopChange;
 import org.mindswap.swoop.change.VersionControl;
 import org.mindswap.swoop.debugging.RepairFrame;
+import org.mindswap.swoop.explore.AxiomExtractor;
+import org.mindswap.swoop.explore.AxiomList;
 import org.mindswap.swoop.fun.Sudoku;
 import org.mindswap.swoop.popup.PopupOntologySource;
 import org.mindswap.swoop.reasoner.PelletReasoner;
@@ -604,8 +606,31 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			}
 		});
 		JMenuAdvanced.add(showOntGraph);
-		JMenuAutomatic = new JMenuItem("Partition Automatically");
 		
+		/*
+		// axiomatic view
+		JMenuItem showClassAxioms= new JMenuItem("Show Told Class Axioms");
+		showClassAxioms.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				showToldClassAxioms();
+			}
+		});
+		JMenuAdvanced.add(showClassAxioms);
+		// axiomatic view
+		JMenuItem showClassAxioms2= new JMenuItem("Show Inferred Class Axioms");
+		showClassAxioms2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				showInferredClassAxioms();
+			}
+		});
+		JMenuAdvanced.add(showClassAxioms2);
+		*/
+		
+		
+		
+		JMenuAutomatic = new JMenuItem("Partition Automatically");		
 		JMenuAutomatic.setToolTipText("Partition the Selected Ontology using the E-connections Framework");
 		JMenuAdvanced.add(JMenuAutomatic);
 		showEnableRules = new JCheckBoxMenuItem("Enable Rules");	
@@ -2711,8 +2736,6 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	public void flyTheMothership()
 	{
 		try {
-			JPanel msgPanel = new JPanel();
-
 			OWLOntology ont = swoopModel.getSelectedOntology();
 			if (ont == null) {
 				JOptionPane.showMessageDialog(null,
@@ -2723,19 +2746,45 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			vec.add(ont);
 
 			MotherShipFrame frame = new MotherShipFrame( swoopModel, vec, ont.getURI() );
-			/*
-			JFrame frame = new JFrame("Flying over " + ont.getURI());
-			frame.getContentPane()
-					.add(
-							new OntologyWithClassHierarchyGraph(
-									swoopModel, vec));
-			frame.setSize( 800, 700 );
-			frame.show();
-			*/
 		} catch (Exception e) 
 		{ e.printStackTrace(); }
-
 	}
+	
+	/*
+	public void showToldClassAxioms()
+	{
+		try {
+			OWLOntology ont = swoopModel.getSelectedOntology();
+			if (ont == null) {
+				JOptionPane.showMessageDialog(null,
+						"No ontology selected");
+				return;
+			}
+			AxiomExtractor extractor = new AxiomExtractor( ont, swoopModel );
+			Vector axioms = extractor.extractClassAxioms( false );
+			AxiomList view = new AxiomList( "Told Axioms for " + swoopModel.shortForm( ont.getLogicalURI() ), axioms );
+			
+		} catch (Exception e) 
+		{ e.printStackTrace(); }
+	}
+	
+	public void showInferredClassAxioms()
+	{
+		try {
+			OWLOntology ont = swoopModel.getSelectedOntology();
+			if (ont == null) {
+				JOptionPane.showMessageDialog(null,
+						"No ontology selected");
+				return;
+			}
+			AxiomExtractor extractor = new AxiomExtractor( ont, swoopModel );
+			Vector axioms = extractor.extractClassAxioms( true );
+			AxiomList view = new AxiomList( "Inferred Axioms for " + swoopModel.shortForm( ont.getLogicalURI() ), axioms );
+			
+		} catch (Exception e) 
+		{ e.printStackTrace(); }
+	}
+	*/
 	
 	
 	public void modelChanged(ModelChangeEvent event) {

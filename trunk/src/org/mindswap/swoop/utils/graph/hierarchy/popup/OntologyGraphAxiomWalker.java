@@ -43,6 +43,7 @@ public class OntologyGraphAxiomWalker
 	private SwoopModel myModel = null;
 	private SwoopReasoner myReasoner = null;
 	private ConciseFormatEntityRenderer myShortform = null;
+	private OntologyWithClassHierarchyGraph myGraph = null;
 	
 	public OntologyGraphAxiomWalker( Vertex v, SwoopModel model )
 	{
@@ -84,9 +85,7 @@ public class OntologyGraphAxiomWalker
 				for (Iterator iter = classSet.iterator(); iter.hasNext(); ) 
 				{
 					OWLClass clazz = (OWLClass)iter.next();
-					//System.out.println(" looking at " + clazz.getURI() );
 					Set supers = OWLDescriptionFinder.getSuperClasses(clazz, Collections.singleton(ont));
-					//System.out.println(" supers has " + supers.size() + " elements.");
 					if(myReasoner.isConsistent(clazz)) 
 					{
 						// remove all the named classes because reasoner will eventually add them
