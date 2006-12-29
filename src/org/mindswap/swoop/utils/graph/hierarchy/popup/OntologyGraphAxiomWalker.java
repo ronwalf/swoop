@@ -111,7 +111,7 @@ public class OntologyGraphAxiomWalker
 								}
 								else
 									desc = (OWLDescription)o;
-								subclassAxioms.add( new SubclassAxiomContainer( 
+								subclassAxioms.add( new ClassAxiomContainer( 
 										              new OWLSubClassAxiomImpl( factory, (OWLDescription)clazz, desc),
 													  myShortform, myModel ));
 							}

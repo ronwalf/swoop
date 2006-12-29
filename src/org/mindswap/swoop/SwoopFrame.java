@@ -91,6 +91,7 @@ import org.mindswap.swoop.change.SwoopChange;
 import org.mindswap.swoop.change.VersionControl;
 import org.mindswap.swoop.debugging.RepairFrame;
 import org.mindswap.swoop.explore.AxiomExtractor;
+import org.mindswap.swoop.explore.AxiomIndexer;
 import org.mindswap.swoop.explore.AxiomList;
 import org.mindswap.swoop.fun.Sudoku;
 import org.mindswap.swoop.popup.PopupOntologySource;
@@ -607,8 +608,9 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		});
 		JMenuAdvanced.add(showOntGraph);
 		
-		/*
+		
 		// axiomatic view
+		/*
 		JMenuItem showClassAxioms= new JMenuItem("Show Told Class Axioms");
 		showClassAxioms.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -617,8 +619,10 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			}
 		});
 		JMenuAdvanced.add(showClassAxioms);
+		*/
+		
 		// axiomatic view
-		JMenuItem showClassAxioms2= new JMenuItem("Show Inferred Class Axioms");
+		JMenuItem showClassAxioms2= new JMenuItem("Show Class Expression Table");
 		showClassAxioms2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
@@ -626,7 +630,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 			}
 		});
 		JMenuAdvanced.add(showClassAxioms2);
-		*/
+		
 		
 		
 		
@@ -2750,7 +2754,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		{ e.printStackTrace(); }
 	}
 	
-	/*
+/*	
 	public void showToldClassAxioms()
 	{
 		try {
@@ -2760,13 +2764,14 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 						"No ontology selected");
 				return;
 			}
-			AxiomExtractor extractor = new AxiomExtractor( ont, swoopModel );
-			Vector axioms = extractor.extractClassAxioms( false );
+			AxiomExtractor extractor = new AxiomExtractor( ont, swoopModel, swoopModel.getReasoner() );
+			Vector axioms = extractor.extractSubclassAxioms( false );
 			AxiomList view = new AxiomList( "Told Axioms for " + swoopModel.shortForm( ont.getLogicalURI() ), axioms );
 			
 		} catch (Exception e) 
 		{ e.printStackTrace(); }
 	}
+*/
 	
 	public void showInferredClassAxioms()
 	{
@@ -2777,14 +2782,20 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 						"No ontology selected");
 				return;
 			}
-			AxiomExtractor extractor = new AxiomExtractor( ont, swoopModel );
-			Vector axioms = extractor.extractClassAxioms( true );
+			AxiomIndexer indexer = new AxiomIndexer( ont, swoopModel, swoopModel.getReasoner() );
+			indexer.index();
+			indexer.print();
+			indexer.view();
+			/*
+			AxiomExtractor extractor = new AxiomExtractor( ont, swoopModel, swoopModel.getReasoner() );
+			Vector axioms = extractor.extractClassAxioms(  );
 			AxiomList view = new AxiomList( "Inferred Axioms for " + swoopModel.shortForm( ont.getLogicalURI() ), axioms );
+			*/
 			
 		} catch (Exception e) 
 		{ e.printStackTrace(); }
 	}
-	*/
+	
 	
 	
 	public void modelChanged(ModelChangeEvent event) {

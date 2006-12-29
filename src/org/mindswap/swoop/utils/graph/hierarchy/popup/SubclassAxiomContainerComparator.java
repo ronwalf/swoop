@@ -32,8 +32,8 @@ public class SubclassAxiomContainerComparator implements Comparator
 	{
 		try
 		{
-			SubclassAxiomContainer sac1 = (SubclassAxiomContainer)o1;
-			SubclassAxiomContainer sac2 = (SubclassAxiomContainer)o2;
+			ClassAxiomContainer sac1 = (ClassAxiomContainer)o1;
+			ClassAxiomContainer sac2 = (ClassAxiomContainer)o2;
 			String name1 = sac1.toString();
 			String name2 = sac2.toString();
 			return name1.compareTo( name2 );
