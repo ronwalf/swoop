@@ -17,7 +17,9 @@ import java.util.Set;
 import org.mindswap.swoop.SwoopModel;
 import org.mindswap.swoop.reasoner.SwoopRDFSReasoner;
 import org.mindswap.swoop.reasoner.SwoopReasoner;
+import org.mindswap.swoop.renderer.entity.ConciseFormatEntityRenderer;
 import org.mindswap.swoop.utils.SetUtils;
+import org.mindswap.swoop.utils.graph.hierarchy.popup.ConcisePlainVisitor;
 import org.semanticweb.owl.model.OWLAnd;
 import org.semanticweb.owl.model.OWLCardinalityRestriction;
 import org.semanticweb.owl.model.OWLClass;
@@ -688,7 +690,21 @@ public class OntologyIndices implements Serializable {
 				// add individual->enumeration to corresponding hashmap
 				OWLEnumeration enu = (OWLEnumeration) desc;
 				if ( DEBUG_NOMINALS )
+				{
 					System.out.println( "<Nominals>: " + entity + " Has Enumeration " + desc);
+					Set inds = enu.getIndividuals();
+					for ( Iterator it = inds.iterator(); it.hasNext();)
+					{
+						OWLIndividual ind = (OWLIndividual)it.next();
+						System.out.println("   " + ind.toString() );
+					}
+					/*
+					ConcisePlainVisitor visitor = new ConcisePlainVisitor( new ConciseFormatEntityRenderer(), null);
+					desc.accept( visitor );
+					String str = visitor.result();
+					System.out.println( "          = " + str);
+					*/
+				}
 				//For expressivity
 				 this.isRDFS = false;
 				 this.isDLLite = false;

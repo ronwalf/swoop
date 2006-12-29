@@ -140,7 +140,6 @@ public class ConcisePlainVisitor extends OWLObjectVisitorAdapter implements Swoo
 	}
 		
 	public void visit( OWLClass clazz ) throws OWLException {
-		String icon = "";
 		pw.print( shortForms.shortForm( clazz.getURI() ) );
 	}
 	
@@ -328,7 +327,7 @@ public class ConcisePlainVisitor extends OWLObjectVisitorAdapter implements Swoo
 			OWLDescription desc = (OWLDescription) it.next();
 			desc.accept( this );
 			if (it.hasNext() || complex.size()>0)
-				pw.print(" = ");
+				pw.print( " " + EQUIVALENTTO + " " );
 		}
 		
 		for ( Iterator it = complex.iterator(); it.hasNext(); ) 
@@ -336,7 +335,7 @@ public class ConcisePlainVisitor extends OWLObjectVisitorAdapter implements Swoo
 			OWLDescription desc = (OWLDescription) it.next();
 			desc.accept( this );
 			if (it.hasNext())
-				pw.print(" = ");
+				pw.print( " " + EQUIVALENTTO + " " );
 		}
 		pw.print(")");
 	}
@@ -540,6 +539,5 @@ public class ConcisePlainVisitor extends OWLObjectVisitorAdapter implements Swoo
 		pw.print(" rdf:type ");
 		axiom.getType().accept( this );
 		pw.print(")");
-    }
-    
+    }   
 }

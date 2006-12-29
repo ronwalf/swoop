@@ -30,7 +30,7 @@ public class AxiomList extends JFrame implements WindowListener, ActionListener
 		System.out.println("AxiomList: data size = " + data.size());
 		myList = new JList( data );	
 		setupUI();
-		setTitle( name );
+		setTitle( name  +" (" + data.size() + ")");
 		setSize(350, 650);
 		setVisible( true );
 		addWindowListener( this );
