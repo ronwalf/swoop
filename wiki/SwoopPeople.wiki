@@ -1,0 +1,10 @@
+#summary Swoopfolks
+
+ * Evren Sirin - Clark and Parsia, LLC
+ * Bijan Parsia - University of Manchester
+ * Bernardo Cuenca Grau - Unversity of Manchester
+ * Aditya Kalyanpur - IBM
+ * Ron Alford - University of Maryland
+ * Vladimir Kolovski - University of Maryland
+ * Christian Halaschek-Wiener - University of Maryland
+ * Taowei Wang - University of Maryland
