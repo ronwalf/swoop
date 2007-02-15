@@ -1,13 +1,5 @@
 #summary An account of how Swoop came to be (and maybe where it's going)
 
-= Introduction =
+First there was [http://www.mindswap.org/2005/SMORE/ SMORE] and [http://www.mindswap.org/~mhgrove/RIC/RIC.shtml RIC]. SMORE was the work of [http://domino.research.ibm.com/comm/research_people.nsf/pages/adityakal.index.html?Open&printable Aditya Kalyanpur]. SMORE was intended as a hybrid web page editor and annotation tool with lightweight ontology editing (similar in spirit to [http://annotation.semanticweb.org/ontomat/index.html OntoMat]). SMORE was mentioned in [http://www.amazon.com/Practical-RDF-Shelley-Powers/dp/0596002637 Practical RDF], but it really didn't have much of a future. Aditya learned what he learned from building it and wasn't really interested in taking it forward. Especially since the code base was, to put it mildly, a horrible mess.
 
-Add your content here.
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+So, sometime in early 2004, Aditya decided he needed to make a nice tool that would get people to stop asking him questions about SMORE. He decided to try for a good OWL ontology editor.
