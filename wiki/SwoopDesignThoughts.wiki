@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary The thinking behind the Way Swoop Is or Could Be
 
 = Current Design =
 
@@ -9,4 +9,3 @@
 == Icky bits ==
 
 = Future and alternative thoughts =
-
