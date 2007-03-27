@@ -108,8 +108,10 @@ import org.mindswap.swoop.utils.SwoopPreferences;
 import org.mindswap.swoop.utils.VersionInfo;
 import org.mindswap.swoop.utils.graph.hierarchy.ClassHierarchyGraph;
 import org.mindswap.swoop.utils.graph.hierarchy.ui.MotherShipFrame;
+import org.mindswap.swoop.utils.owlapi.AxiomCollector;
 import org.mindswap.swoop.utils.owlapi.CorrectedRDFRenderer;
 import org.mindswap.swoop.utils.owlapi.ImportChange;
+import org.mindswap.swoop.utils.owlapi.OWLOntBuilder;
 import org.mindswap.swoop.utils.owlapi.OWLOntSplitter;
 import org.mindswap.swoop.utils.treeexport.STFileFilter;
 import org.mindswap.swoop.utils.treeexport.TM3FileFilter;
@@ -124,17 +126,30 @@ import org.mindswap.swoop.utils.ui.SwoopHTMLFileFilter;
 import org.mindswap.swoop.utils.ui.SwoopProgressDialog;
 import org.mindswap.swoop.utils.ui.TextFileFilter;
 import org.semanticweb.owl.model.OWLClass;
+import org.semanticweb.owl.model.OWLClassAxiom;
+import org.semanticweb.owl.model.OWLDataFactory;
 import org.semanticweb.owl.model.OWLDataProperty;
+import org.semanticweb.owl.model.OWLDescription;
+import org.semanticweb.owl.model.OWLDifferentIndividualsAxiom;
+import org.semanticweb.owl.model.OWLDisjointClassesAxiom;
 import org.semanticweb.owl.model.OWLEntity;
+import org.semanticweb.owl.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owl.model.OWLException;
 import org.semanticweb.owl.model.OWLIndividual;
 import org.semanticweb.owl.model.OWLNamedObject;
+import org.semanticweb.owl.model.OWLNot;
 import org.semanticweb.owl.model.OWLObject;
 import org.semanticweb.owl.model.OWLObjectProperty;
 import org.semanticweb.owl.model.OWLOntology;
+import org.semanticweb.owl.model.OWLSameIndividualsAxiom;
+import org.semanticweb.owl.model.OWLSubClassAxiom;
+import org.semanticweb.owl.model.change.AddClassAxiom;
 import org.semanticweb.owl.model.change.AddImport;
+import org.semanticweb.owl.model.change.AddIndividualAxiom;
+import org.semanticweb.owl.model.change.AddIndividualClass;
 import org.semanticweb.owl.model.change.ChangeVisitor;
 import org.semanticweb.owl.model.change.OntologyChange;
+import org.semanticweb.owl.model.change.RemoveClassAxiom;
 import org.semanticweb.owl.model.helper.OntologyHelper;
 
 public class SwoopFrame extends JFrame implements ActionListener, WindowListener, SwoopModelListener {
@@ -142,7 +157,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 	private JMenu bookmarkMenu;
 	private JMenuItem JMenuFileNew, newOntMItem, loadOntMItem, loadWkspMItem,
 			saveWkspMItem, saveAsMItem, ontSaveMItem, ontCodeMenu,
-			ontCodeASMenu, exportStatsMItem, exportTreeMItem, exportHTMLMItem;
+			ontCodeASMenu, exportStatsMItem, exportTreeMItem, exportHTMLMItem, exportInferredKB;
 	private JMenuItem clearMItem, exportMItem, prefMItem, addResHoldMItem, 
 			viewResHoldMItem, queryMItem, repairMItem, versionMItem, sudokuMItem;
 	private JMenuItem addBookmarkMenu, remBookmarkMenu, sortBookmarkMenu;
@@ -469,6 +484,9 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		exportHTMLMItem = new JMenuItem("Export HTML");
 		exportHTMLMItem.setToolTipText("Export HTML for Currently Selected Entity / Ontology");
 		
+		exportInferredKB = new JMenuItem("Export Inferred Ontology");
+		exportInferredKB.setToolTipText("Classify and Export the Inferred State of the Selected Ontology");
+		
 		JMenuItem exitMItem = new JMenuItem("Exit");
 		JMenuAdvanced = new JMenu("Advanced");
 
@@ -485,7 +503,8 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		JMenuFile.add(exportMItem);
 		JMenuFile.add(exportHTMLMItem);
 //		JMenuFile.add(exportStatsMItem);
-		JMenuFile.add(exportTreeMItem);		
+		JMenuFile.add(exportTreeMItem);
+		JMenuFile.add(exportInferredKB);
 		JMenuFile.addSeparator();
 		JMenuFile.add(clearMItem);
 		JMenuFile.addSeparator();
@@ -735,6 +754,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		exportStatsMItem.addActionListener(this);
 		exportTreeMItem.addActionListener(this);
 		exportHTMLMItem.addActionListener(this);
+		exportInferredKB.addActionListener(this);
 		prefMItem.addActionListener(this);
 		addResHoldMItem.addActionListener(this);
 		viewResHoldMItem.addActionListener(this);
@@ -897,6 +917,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		exportMItem.setEnabled(false);
 		clearMItem.setEnabled(false);
 		exportTreeMItem.setEnabled(false);
+		exportInferredKB.setEnabled(false);
 		exportStatsMItem.setEnabled(false);
 		exportHTMLMItem.setEnabled(false);
 	}
@@ -908,6 +929,7 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		exportMItem.setEnabled(true);
 		clearMItem.setEnabled(true);
 		exportTreeMItem.setEnabled(true);
+		exportInferredKB.setEnabled(true);
 		exportStatsMItem.setEnabled(true);
 		exportHTMLMItem.setEnabled(true);
 	}
@@ -1383,13 +1405,19 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		       					chooser.getSelectedFile().getName());
 		       VisualizationFileFilter filter = (VisualizationFileFilter)chooser.getFileFilter();
 				this.termDisplay.exportCurrentTree( chooser.getSelectedFile(), filter.getExtension() );
-		    }		    			
+		    }
 		}
 		else
 		if (e.getSource() == exportHTMLMItem)
 		{
 			// export HTML of currently selected entity/ontology
 			this.exportHTML(swoopModel.selectedOWLObject);			
+		}
+		else
+		if ( e.getSource() == exportInferredKB )
+		{
+			// turn on pellet, if necessary, and then dump the inferred ontology to a file
+			this.exportInferredKB();
 		}
 		else
 		if (e.getSource() == prefMItem) {
@@ -2912,4 +2940,198 @@ public class SwoopFrame extends JFrame implements ActionListener, WindowListener
 		}
 		return html;
 	}
+	
+	/* tw7: used to output inferred state of an ontology
+	 * 
+	 */
+	protected void exportInferredKB()
+	{
+		try 
+		{
+			OWLOntology ont = swoopModel.getSelectedOntology();
+			if (ont == null) 
+			{
+				JOptionPane.showMessageDialog(null,
+						"No ontology selected");
+				return;
+			}
+			
+			JFileChooser wrapChooser = new JFileChooser();
+			FileFilter[] filters;
+			
+			File output;
+			int returnVal = wrapChooser.showSaveDialog(this);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				output = wrapChooser.getSelectedFile();
+			} else { // save cancelled
+				return;
+			}
+
+			String name = output.getName().substring(
+					output.getName().lastIndexOf("/") + 1,
+					output.getName().length());
+			
+			
+			
+			
+			swoopModel.setReasonerWithThreadBlock( new PelletReasoner() );
+			PelletReasoner reasoner = (PelletReasoner)swoopModel.getReasoner();
+			
+			// clone the target ontology
+			OWLOntBuilder ob = new OWLOntBuilder( ont.getLogicalURI() );
+			Set axioms = AxiomCollector.axiomize( ont );
+			OWLOntology clone = ob.buildOntologyFromAxioms( axioms );
+			OWLDataFactory factory = ob.currentDF;
+			
+			OWLClass owlThing = factory.getOWLThing();
+			OWLClass owlNothing = factory.getOWLNothing();
+			
+			Set satClasses = reasoner.descendantClassesOf( owlThing );
+			Set unSatClasses = reasoner.equivalentClassesOf( owlNothing );
+
+			
+			// 'flatten' the unsat/sat classes 
+			Set flattenedSatClasses = new HashSet();
+			for ( Iterator it = satClasses.iterator(); it.hasNext(); )
+			{				
+				Set ip = (Set)it.next();
+				flattenedSatClasses.addAll( ip );
+			}
+			
+			Set flattenedUnSatClasses = new HashSet();
+			for ( Iterator it = unSatClasses.iterator(); it.hasNext(); )
+			{
+				OWLClass c = (OWLClass)it.next();
+				flattenedUnSatClasses.add( c );
+			}
+			
+			flattenedSatClasses.add( owlThing );
+			flattenedSatClasses.remove( owlNothing );
+			flattenedUnSatClasses.add( owlNothing );
+			
+			// now go through each class and individual, and add inferred statements in there
+			Set classes = reasoner.getClasses();
+			for (Iterator it = classes.iterator(); it.hasNext(); )
+			{
+				OWLClass c = (OWLClass)it.next();
+				Set subclasses = reasoner.subClassesOf( c );
+				
+				// add all subclasses
+				for ( Iterator subIt = subclasses.iterator(); subIt.hasNext(); )
+				{
+					Set subs = (Set)subIt.next();
+					for ( Iterator sIt = subs.iterator(); sIt.hasNext(); )
+					{
+						OWLClass subclass = (OWLClass)sIt.next();
+						OWLSubClassAxiom ax = factory.getOWLSubClassAxiom( subclass, c );
+						AddClassAxiom acx = new AddClassAxiom( clone, ax, null);
+						acx.accept( (ChangeVisitor)clone );
+					}
+				}
+				
+				// add all equivalents
+				Set equivalents = reasoner.equivalentClassesOf( c );
+				OWLEquivalentClassesAxiom equiAx = factory.getOWLEquivalentClassesAxiom( equivalents );
+				AddClassAxiom equiAddAxiom = new AddClassAxiom( clone, equiAx, null );
+				equiAddAxiom.accept( (ChangeVisitor)clone );
+				// all unsat classes are equivalent
+				if ( !reasoner.isConsistent( c ) )
+				{
+					Set equi = new HashSet();
+					OWLEquivalentClassesAxiom eqAx = factory.getOWLEquivalentClassesAxiom( flattenedUnSatClasses );
+					AddClassAxiom aca = new AddClassAxiom( clone, eqAx, null );
+					aca.accept( (ChangeVisitor)clone );
+				}
+				
+				// add all disjoints				
+				if ( reasoner.isConsistent( c ) )
+				{
+					Set disjoints = reasoner.disjointClassesOf( c );
+					for ( Iterator disIt = disjoints.iterator(); disIt.hasNext(); )
+					{
+						Set disj = (Set)disIt.next();
+						OWLDisjointClassesAxiom disjAx = factory.getOWLDisjointClassesAxiom( disj );
+						AddClassAxiom disAddAxiom = new AddClassAxiom( clone, disjAx, null );
+						disAddAxiom.accept( (ChangeVisitor)clone );
+					}					
+					for ( Iterator disIt = flattenedUnSatClasses.iterator(); disIt.hasNext(); )
+					{
+						HashSet disj = new HashSet();
+						OWLClass unsat = (OWLClass)disIt.next();
+						disj.add( c );
+						disj.add( unsat );					
+						OWLDisjointClassesAxiom disjAx = factory.getOWLDisjointClassesAxiom( disj );
+						AddClassAxiom disAddAxiom = new AddClassAxiom( clone, disjAx, null );
+						disAddAxiom.accept( (ChangeVisitor)clone );						
+					}					
+				}
+				
+				// add all complements
+				Set complements = reasoner.complementClassesOf( c );
+				HashSet equiNots = new HashSet();
+				for ( Iterator compIt = complements.iterator(); compIt.hasNext(); )
+				{
+					OWLClass comp = (OWLClass)compIt.next();
+					OWLNot not = factory.getOWLNot( comp );
+					equiNots.add( not );
+				}
+				OWLEquivalentClassesAxiom compAx = factory.getOWLEquivalentClassesAxiom( equiNots );
+				AddClassAxiom compAddAxiom = new AddClassAxiom( clone, compAx, null );
+				compAddAxiom.accept( (ChangeVisitor)clone );				
+			}			
+			
+			Set individuals = reasoner.getIndividuals();
+			for ( Iterator it = individuals.iterator(); it.hasNext(); )
+			{
+				OWLIndividual ind = (OWLIndividual)it.next();
+				
+				// add all types
+				Set types = reasoner.allTypesOf( ind );
+				for ( Iterator typeIt = types.iterator(); typeIt.hasNext(); )
+				{
+					Set set = (Set)typeIt.next();
+					for ( Iterator setIt = set.iterator(); setIt.hasNext(); )
+					{
+						OWLDescription desc = (OWLDescription)setIt.next();
+						AddIndividualClass aic = new AddIndividualClass( clone, ind, desc, null);
+						aic.accept( (ChangeVisitor)clone );
+					}
+				}
+				
+				// add all sameAs
+				Set sameAsSet = reasoner.getSameAsIndividuals( ind );
+				OWLSameIndividualsAxiom sia = factory.getOWLSameIndividualsAxiom( sameAsSet );
+				AddIndividualAxiom aia = new AddIndividualAxiom( clone, sia, null );
+				aia.accept( (ChangeVisitor)clone );
+				
+				// add all differents
+				Set diffs = reasoner.getDifferentFromIndividuals( ind );
+				if ( diffs != null )
+				{
+					for ( Iterator diffIter = diffs.iterator(); diffIter.hasNext(); )
+					{
+						Set set = (Set)diffIter.next();
+						OWLDifferentIndividualsAxiom dia = factory.getOWLDifferentIndividualsAxiom( set );
+						AddIndividualAxiom diffIA = new AddIndividualAxiom( clone, dia, null );
+						diffIA.accept( (ChangeVisitor)clone );
+					}
+				}
+			}
+			
+			// finally, serialize out to RDF/XML
+			// save current selected ontology to disk
+
+			CorrectedRDFRenderer rend = new CorrectedRDFRenderer();
+			StringWriter st = new StringWriter();
+			rend.renderOntology(clone, st);
+			
+			OutputStream fileStream = new FileOutputStream(output);
+			Writer writer = new OutputStreamWriter(fileStream, Charset.forName("UTF-8"));
+			writer.write(st.toString());
+			writer.close();			
+		}
+		catch (Exception e) 
+		{ e.printStackTrace(); }
+	}
+	
 }

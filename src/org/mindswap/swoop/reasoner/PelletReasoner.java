@@ -229,10 +229,11 @@ public class PelletReasoner extends Reasoner implements SwoopReasoner {
 	public Set complementClassesOf(OWLClass c) throws OWLException {
 		// tw7
 		OWLClass owlNothing = this.getOntology().getOWLDataFactory().getOWLNothing();
+		OWLClass owlThing   = this.getOntology().getOWLDataFactory().getOWLThing();
 		ATermAppl aa = ATermUtils.makeTermAppl( c.getURI().toString() );	
 		Set complementAtermSet = kb.getComplements( aa );
 		// now convert Aterms to OWLClasss
-		// a set of sets (sets of equivalent OWLClasses that are disjoint with c)
+		// a set of sets (sets of equivalent OWLClasses that are complment of c)
 		HashSet complements = new HashSet();
 		try
 		{
@@ -245,6 +246,8 @@ public class PelletReasoner extends Reasoner implements SwoopReasoner {
 				OWLClass aClass = super.getClass( uri );
 				if ( representation.equals("not(_TOP_)") )
 					aClass = owlNothing;
+				if ( representation.equals("_TOP_") )
+					aClass = owlThing;
 				if ( aClass == null )
 					throw new Exception("Cannot convert aterm to class with <" + uri + ">");
 				complements.add( aClass );
