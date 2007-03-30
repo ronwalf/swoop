@@ -61,28 +61,31 @@ public class AxiomCollector extends OWLObjectVisitorAdapter {
 		this.factory = ontology.getOWLDataFactory();
 		reset();
 	}
+
+	public void collectAxioms() throws OWLException {
+		ontology.accept(this);
+		collectAxiomsFromSet(ontology.getClasses());
+		collectAxiomsFromSet(ontology.getDatatypes());
+		collectAxiomsFromSet(ontology.getAnnotationProperties());
+		collectAxiomsFromSet(ontology.getDataProperties());
+		collectAxiomsFromSet(ontology.getObjectProperties());
+		collectAxiomsFromSet(ontology.getIndividuals());
+		
+		collectAxiomsFromSet(ontology.getClassAxioms());
+		collectAxiomsFromSet(ontology.getPropertyAxioms());
+		collectAxiomsFromSet(ontology.getIndividualAxioms());
+	}
 	
+	protected void collectAxiomsFromSet(Set set) throws OWLException {
+		for (Iterator iter = set.iterator(); iter.hasNext();) {
+			OWLObject obj = (OWLObject) iter.next();
+			obj.accept(this);
+		}
+	}
+
 	public static Set axiomize(OWLOntology ontology) throws OWLException {
 		AxiomCollector collector = new AxiomCollector(ontology);
-		
-		Set toVisit = new HashSet();
-		toVisit.add(ontology);
-		toVisit.addAll(ontology.getClasses());
-		toVisit.addAll(ontology.getDatatypes());
-		toVisit.addAll(ontology.getAnnotationProperties());
-		toVisit.addAll(ontology.getDataProperties());
-		toVisit.addAll(ontology.getObjectProperties());
-		toVisit.addAll(ontology.getIndividuals());
-		
-		toVisit.addAll(ontology.getClassAxioms());
-		toVisit.addAll(ontology.getPropertyAxioms());
-		toVisit.addAll(ontology.getIndividualAxioms());
-		
-		for (Iterator iter = toVisit.iterator(); iter.hasNext();) {
-			OWLObject obj = (OWLObject) iter.next();
-			obj.accept(collector);
-		}
-		
+		collector.collectAxioms();
 		return collector.axioms();
 	}
 	
@@ -92,6 +95,9 @@ public class AxiomCollector extends OWLObjectVisitorAdapter {
 	
 	public void reset() {
 		collectedAxioms = new HashSet();
+	}
+	public void reset(Set set) {
+		collectedAxioms = set;
 	}
 
 	protected void addAnnotations(OWLObject node) throws OWLException {

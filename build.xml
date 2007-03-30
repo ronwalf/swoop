@@ -36,6 +36,10 @@
             <include name="**/*.jar"/>
             <exclude name="**/${project.name}*.jar"/>
             <exclude name="ekit/ekitapplet*.jar"/>
+            <exclude name="econn-owlapi/examples.jar"/>
+            <exclude name="econn-owlapi/validation_test.jar"/>
+            <exclude name="econn-owlapi/owl-servlet.jar"/>
+            <exclude name="econn-owlapi/owltest.jar"/>
             <!--<exclude name="**/qtag*"/>-->
         </fileset>
     </path>
@@ -56,6 +60,7 @@
             <exclude name="org/mindswap/swoop/rules/**/*.java"/>
             <exclude name="org/mindswap/swoop/reasoner/SwoopDIGReasoner.java"/>
             <exclude name="org/mindswap/swoop/renderer/entity/NLVisitor.java"/>
+            <exclude name="org/mindswap/swoop/renderer/entity/NLEntityRenderer.java"/>
             <exclude name="org/mindswap/swoop/refactoring/Test*.java"/>
             <exclude name="org/mindswap/swoop/renderer/entity/SwoopURLListener.java"/>
             <!--
@@ -107,6 +112,10 @@
                 <exclude name="**/*.class" />
                 <exclude name="lib/**/${project.name}*.jar" />
                 <exclude name="lib/ekit/ekitapplet*.jar" />
+                <exclude name="lib/econn-owlapi/examples.jar"/>
+                <exclude name="lib/econn-owlapi/owl-servlet.jar"/>
+                <exclude name="lib/econn-owlapi/owltest.jar"/>
+                <exclude name="lib/econn-owlapi/validation_test.jar"/>
                 <!--<exclude name="lib/**/qtag*"/>-->
             </fileset>
         </copy>
