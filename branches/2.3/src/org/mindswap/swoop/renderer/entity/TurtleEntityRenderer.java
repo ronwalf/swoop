@@ -160,6 +160,7 @@ public class TurtleEntityRenderer extends BaseEntityRenderer implements SwoopEdi
 				indentLevel ++;
 				for ( Iterator it = and.getOperands().iterator();it.hasNext(); ) {
 					OWLDescription desc = (OWLDescription) it.next();
+					System.out.println( desc );
 					pw.println(getIndentString());
 					desc.accept( this );
 					if (it.hasNext()) {

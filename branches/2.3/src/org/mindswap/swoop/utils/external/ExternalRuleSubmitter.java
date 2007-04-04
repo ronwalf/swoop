@@ -76,7 +76,7 @@ public class ExternalRuleSubmitter extends JFrame implements ActionListener, Ite
 		
 	}
 	
-	private SubmissionProfile PIT = new SubmissionProfile("Profiles in Terror", "http://profilesinterror.mindswap.org/document/accept/", null, null, null );
+	private SubmissionProfile PIT = new SubmissionProfile("Profiles in Terror", "http://profilesinterror.mindswap.org/document/accept/", "http://profilesinterror.mindswap.org/document/accept/", null, null );
 	private SubmissionProfile PP = new SubmissionProfile("PaperPuppy", "http://paperpuppy.mindswap.org/document/accept/", "http://paperpuppy.mindswap.org/document/accept/check_user", new String[]{"is a Display Rule?"}, new String[]{"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.mindswap.org/dav/ontologies/2006/paperpuppy.owl#GraphRule>"} );
 	
 	private static final boolean DEBUG = false;

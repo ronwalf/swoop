@@ -38,10 +38,12 @@ import org.mindswap.pellet.taxonomy.ClassifyProgress;
 import org.mindswap.pellet.taxonomy.DefaultClassifyProgress;
 import org.mindswap.pellet.taxonomy.Taxonomy;
 import org.mindswap.pellet.taxonomy.TaxonomyNode;
+import org.mindswap.pellet.utils.ATermUtils;
 import org.mindswap.pellet.utils.Timer;
 import org.mindswap.swoop.utils.ExpressivityChecker;
 import org.mindswap.swoop.utils.exceptions.UserCanceledException;
 import org.semanticweb.owl.io.ShortFormProvider;
+import org.semanticweb.owl.io.vocabulary.OWLVocabularyAdapter;
 import org.semanticweb.owl.model.OWLClass;
 import org.semanticweb.owl.model.OWLDescription;
 import org.semanticweb.owl.model.OWLException;
@@ -174,8 +176,50 @@ public class PelletReasoner extends Reasoner implements SwoopReasoner {
 		return kb.getTaxonomy();		
 	}
 	
-	public Set disjointClassesOf(OWLClass c) throws OWLException {
-		// TODO Auto-generated method stub
+	/* (non-Javadoc)
+	 * @see org.mindswap.swoop.SwoopReasoner#disjointClassesOf(org.semanticweb.owl.model.OWLClass)
+	 */
+	public Set disjointClassesOf(OWLClass c) throws OWLException 
+	{
+		// tw7
+		OWLClass owlNothing = this.getOntology().getOWLDataFactory().getOWLNothing();
+		ATermAppl aa = ATermUtils.makeTermAppl( c.getURI().toString() );	
+		Set disjointAtermSets = kb.getDisjoints( aa );
+		// now convert Aterms to OWLClasss
+		// a set of sets (sets of equivalent OWLClasses that are disjoint with c)
+		HashSet disjoints = new HashSet();
+		try
+		{
+			for ( Iterator it = disjointAtermSets.iterator(); it.hasNext(); )
+			{
+				// this is a set of sets (sets of equivalent ATerms that are disjoint with c)
+				Set disjointAtermSet = (Set)it.next();
+				// build one that contains OWLClasses as opposed to ATerms
+				HashSet oneDisjointEquivalents = new HashSet(); 
+				for ( Iterator iter = disjointAtermSet.iterator(); iter.hasNext(); )
+				{
+					ATermAppl aterm = (ATermAppl)iter.next();
+					String representation = aterm.toString();
+					URI uri = new URI( representation );
+					OWLClass aClass = super.getClass( uri );
+					if ( representation.equals("not(_TOP_)") )
+						aClass = owlNothing;
+					
+					if ( aClass == null )
+						throw new Exception("Cannot convert aterm to class with <" + uri + ">");
+					else
+					{
+						oneDisjointEquivalents.add( aClass );
+					}
+				}
+				disjoints.add( oneDisjointEquivalents );
+			}
+			return disjoints;
+		}
+		catch ( Exception e )
+		{ e.printStackTrace(); }
+		
+		// if exception occurred
 		return Collections.EMPTY_SET;
 	}
 
@@ -183,7 +227,37 @@ public class PelletReasoner extends Reasoner implements SwoopReasoner {
 	 * @see org.mindswap.swoop.SwoopReasoner#complementClassesOf(org.semanticweb.owl.model.OWLClass)
 	 */
 	public Set complementClassesOf(OWLClass c) throws OWLException {
-		// TODO Auto-generated method stub
+		// tw7
+		OWLClass owlNothing = this.getOntology().getOWLDataFactory().getOWLNothing();
+		OWLClass owlThing   = this.getOntology().getOWLDataFactory().getOWLThing();
+		ATermAppl aa = ATermUtils.makeTermAppl( c.getURI().toString() );	
+		Set complementAtermSet = kb.getComplements( aa );
+		// now convert Aterms to OWLClasss
+		// a set of sets (sets of equivalent OWLClasses that are complment of c)
+		HashSet complements = new HashSet();
+		try
+		{
+			for ( Iterator it = complementAtermSet.iterator(); it.hasNext(); )
+			{
+				// this is a set ATerms that are complement with c
+				ATermAppl aterm = (ATermAppl)it.next();
+				String representation = aterm.toString();
+				URI uri = new URI( representation );
+				OWLClass aClass = super.getClass( uri );
+				if ( representation.equals("not(_TOP_)") )
+					aClass = owlNothing;
+				if ( representation.equals("_TOP_") )
+					aClass = owlThing;
+				if ( aClass == null )
+					throw new Exception("Cannot convert aterm to class with <" + uri + ">");
+				complements.add( aClass );
+			}
+			return complements;
+		}
+		catch ( Exception e )
+		{ e.printStackTrace(); }
+		
+		// if exception occurred
 		return Collections.EMPTY_SET;
 	}
 
