@@ -38,7 +38,7 @@ public class HierarchicalVertexDataRenderer implements SizeConstants
 	private HierarchicalVertexDataRenderer()
 	{}
 	
-	public void render( Graphics2D g2d, int x, int y, int radius, ClassTreeNode node)
+	public void render( Graphics2D g2d, int x, int y, ClassTreeNode node)
 	{
 		int r = node.getSubTreeSize() * SizeConstants.unitSize;
 		int numChildren = node.getNumChildren();

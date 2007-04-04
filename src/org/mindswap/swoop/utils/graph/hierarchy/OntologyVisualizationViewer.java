@@ -20,8 +20,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -38,6 +41,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -67,7 +74,8 @@ import edu.uci.ics.jung.visualization.VisualizationViewer;
  * @author Tom Nelson
  * @author Danyel Fisher
  */
-public class OntologyVisualizationViewer extends VisualizationViewer {
+public class OntologyVisualizationViewer extends VisualizationViewer
+{
 	//protected StatusCallback statusCallback;
 	Thread relaxer;
 
@@ -166,7 +174,7 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 	
 	private double DX = 0;
 	private double DY = 0;
-	
+
 	/**
 	 * The VisualizationViewer constructor creates a JPanel based a given Layout
 	 * and Renderer. While GraphDraw places reasonable defaults on these, this
@@ -182,7 +190,7 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 		super(layout, r);
 		myModel = model;
 		myGraph = graph;
-
+		
 		// adding postrenderer (overlaygraph)
 		//postRenderers.add(myGraph.getOverlayGraph());
 
@@ -225,6 +233,7 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 		this.manualSuspend = false;
 		renderingHints.put(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
+		
 		init();
 		initMouseClicker();
 	}
@@ -268,6 +277,7 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 	public void autoPanZoom() 
 	{		
 		Rectangle rect = getViewRectangle();
+		
 		int xfocus = (int) ( (rect.width/2 + rect.x) );
 		int yfocus = (int) ( (rect.height/2 + rect.y) );
 		
@@ -323,7 +333,7 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 
 	public void autoPanZoomTest() 
 	{
-		
+
 		Rectangle rect = getViewRectangle();
 		int xfocus = (int) ( (rect.width/2 + rect.x) );
 		int yfocus = (int) ( (rect.height/2 + rect.y) );
@@ -1277,16 +1287,18 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 			previousSelectedVertex = (SwoopOntologyVertex) v;
 			OntologyWithClassHierarchyRenderer rend = (OntologyWithClassHierarchyRenderer) renderer;
 
-			// re-center at the point of double left click
-			if (SwingUtilities.isLeftMouseButton(e) && (e.getClickCount() == 2)) {
-
+			// refit the vertices into the viewport when double-clicked on whitespace
+			if (SwingUtilities.isLeftMouseButton(e) && (e.getClickCount() == 2)) 
+			{
 				if (!rend.getIsDrawContent() || picked == null) {
 					autoPanZoomTest();
 					return;
 				}
 			}
-
-			if (rend.getIsDrawContent()) {
+			
+			
+			if (rend.getIsDrawContent()) 
+			{
 				// if no vertex selected, we exit
 				if (v == null) 
 				{
@@ -1320,8 +1332,8 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 					handleRightClick(e, rend, p, v);
 				}
 			}
+			
 			repaint();
-
 		}
 
 		private void handleRightClick(MouseEvent e,
@@ -1492,12 +1504,6 @@ public class OntologyVisualizationViewer extends VisualizationViewer {
 	 */
 	public void setPickSupport(PickSupport pickSupport) {
 		this.pickSupport = pickSupport;
-	}
+	}	
 
-	/**
-	 * @return Returns the transform.
-	 */
-	public AffineTransform getTransform() {
-		return transform;
-	}
 }

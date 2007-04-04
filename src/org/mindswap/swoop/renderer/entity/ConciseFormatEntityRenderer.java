@@ -1670,6 +1670,7 @@ public class ConciseFormatEntityRenderer extends BaseEntityRenderer implements S
 		
 		// get defined superclasses
 		Set supers = OWLDescriptionFinder.getSuperClasses(clazz, reasoner.getOntologies());
+		
 		if(reasoner.isConsistent(clazz)) {
 			// remove all the named classes because reasoner will eventually add them
 			i = supers.iterator();

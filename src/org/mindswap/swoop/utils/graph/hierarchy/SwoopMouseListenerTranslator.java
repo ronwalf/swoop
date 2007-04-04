@@ -62,7 +62,8 @@ public class SwoopMouseListenerTranslator extends MouseListenerTranslator
 	/**
 	 * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
 	 */
-	public void mouseClicked(MouseEvent e) {
+	public void mouseClicked(MouseEvent e) 
+	{
 	    Vertex v = getVertex(e.getPoint());
 		if ( v != null ) {
 			gel.graphClicked(v, e );

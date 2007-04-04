@@ -100,7 +100,7 @@ public class OntologyWithClassHierarchyRenderer extends PluggableRenderer
         	HierarchicalVertexDataRenderer rend = HierarchicalVertexDataRenderer.getInstance();
         	OntologyGraphNode node = (OntologyGraphNode)v.getUserDatum( OntologyWithClassHierarchyGraph.DATA );
         	int size = node.getDiameter();
-        	rend.render(g2d, x, y, size, node.getTreeNode() );
+        	rend.render(g2d, x, y, node.getTreeNode() );
         }
         
         String label = vertexStringer.getLabel(v);
