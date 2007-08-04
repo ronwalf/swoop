@@ -21,7 +21,7 @@
     <property name="test.dir" location="${base.dir}/test" />
 
     <property name="project.name" value="swoop" />
-    <property name="project.version.number" value="2.3" />
+    <property name="project.version.number" value="2.3beta4" />
     <property name="mainclass" value="org.mindswap.swoop.Swoop"/>
     <property name="test.class.name" value="org.mindswap.swoop.AllTests"/>
     <property name="catalina.home" value="${env.CATALINA_HOME}" />

@@ -21,7 +21,6 @@ NATO http://www.mindswap.org/ontologies/IEDMv1.0.owl http://www.mindswap.org/ont
 OWLS-Profile http://www.daml.org/services/owl-s/1.1/Profile.owl http://www.daml.org/services/owl-s/1.1/Profile.owl
 PIT http://counterterror.mindswap.org/2005/terrorism.owl http://www.mindswap.org/dav/ontologies/terrorism.owl
 Pizza http://www.co-ode.org/ontologies/pizza/pizza_20041007.owl http://www.co-ode.org/ontologies/pizza/pizza_20041007.owl
-Resume http://www.owl-ontologies.com/resume.owl http://www.owl-ontologies.com/resume.owl
 SUMO http://reliant.teknowledge.com/DAML/SUMO.owl http://reliant.teknowledge.com/DAML/SUMO.owl
 Sweet-JPL http://sweet.jpl.nasa.gov/ontology/earthrealm.owl http://sweet.jpl.nasa.gov/ontology/earthrealm.owl
 TAP http://139.91.183.30:9090/RDF/VRP/Examples/tap.rdf http://139.91.183.30:9090/RDF/VRP/Examples/tap.rdf
