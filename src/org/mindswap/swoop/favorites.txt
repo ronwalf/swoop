@@ -8,13 +8,12 @@ FLA http://www.flacp.fujitsulabs.com/tce/ontologies/2004/03/object.owl http://ww
 FOAF http://xmlns.com/foaf/0.1/index.rdf http://xmlns.com/foaf/0.1/index.rdf
 FoodSwap http://www.mindswap.org/dav/ontologies/commonsense/food/foodswap.owl http://www.mindswap.org/dav/ontologies/commonsense/food/foodswap.owl
 Galen http://www.mindswap.org/ontologies/galen.owl http://www.mindswap.org/ontologies/galen.owl
-Koala http://protege.stanford.edu/plugins/owl/owl-library/koala.owl http://protege.stanford.edu/plugins/owl/owl-library/koala.owl
+Koala http://protege.stanford.edu/plugins/owl/owl-library/koala.owl http://protege.cim3.net/file/pub/ontologies/koala/koala.owl
 Mad_Cow http://www.mindswap.org/ontologies/mad_cows.owl http://www.mindswap.org/ontologies/mad_cows.owl
 MGED_Ontology http://mged.sourceforge.net/ontologies/MGEDOntology.daml http://mged.sourceforge.net/ontologies/MGEDOntology.daml
 MILO http://reliant.teknowledge.com/DAML/Mid-level-ontology.owl http://reliant.teknowledge.com/DAML/Mid-level-ontology.owl
 MindSwappers http://www.mindswap.org/2004/owl/mindswappers http://www.mindswap.org/2004/owl/mindswappers
 mini-Tambis http://miniTambis http://www.mindswap.org/ontologies/debugging/miniTambis.owl
-Mouse http://www.geneontology.org/owl/ http://www.fruitfly.org/~cjm/obo-download/obo-all/adult_mouse_anatomy/adult_mouse_anatomy.owl
 NATO http://www.mindswap.org/ontologies/IEDMv1.0.owl http://www.mindswap.org/ontologies/IEDMv1.0.owl
 OWLS-Profile http://www.daml.org/services/owl-s/1.1/Profile.owl http://www.daml.org/services/owl-s/1.1/Profile.owl
 Pizza http://www.co-ode.org/ontologies/pizza/pizza_20041007.owl http://www.co-ode.org/ontologies/pizza/pizza_20041007.owl
@@ -29,10 +28,7 @@ Wine http://www.w3.org/2001/sw/WebOnt/guide-src/wine.owl http://www.w3.org/2001/
 WS-Policy-Example http://www.mindswap.org/dav/ontologies/policyContainmentTest.owl http://www.mindswap.org/dav/ontologies/policyContainmentTest.owl
 pit http://counterterror.mindswap.org/2005/terrorism.owl http://www.mindswap.org/dav/ontologies/terrorism.owl
 water http://loki.cae.drexel.edu/~wbs/ontology/2004/04/model http://loki.cae.drexel.edu/~wbs/ontology/2004/04/model
-swrl_family http://a.com/ontology http://protege.stanford.edu/plugins/owl/owl-library/family.swrl.owl
-camera http://www.xfront.com/owl/ontologies/camera/ http://protege.stanford.edu/plugins/owl/owl-library/camera.owl
 amino-acid http://www.co-ode.org/ontologies/amino-acid/2005/10/11/amino-acid.owl http://www.co-ode.org/ontologies/amino-acid/2005/10/11/amino-acid.owl
 biopax http://www.biopax.org/release/biopax-level1.owl http://www.biopax.org/release/biopax-level1.owl
 hydrologic http://loki.cae.drexel.edu/~how/HydrologicUnits/hu http://loki.cae.drexel.edu/%7Ehow/HydrologicUnits/hu
-people_pets http://cohse.semanticweb.org/ontologies/people http://protege.stanford.edu/plugins/owl/owl-library/people+pets.owl
 Resume http://www.owl-ontologies.com/resume.owl http://www.owl-ontologies.com/resume.owl
